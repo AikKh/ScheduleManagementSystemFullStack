@@ -1,0 +1,119 @@
+﻿@page "/register"
+@inject ScheduleManagementSystem.Client.Services.AuthService AuthService
+@inject NavigationManager NavigationManager
+@using ScheduleManagementSystem.Shared.Models
+@using System.ComponentModel.DataAnnotations
+
+<div class="card">
+    <h1>Create Your Account</h1>
+    <p class="subtitle">Join the university schedule management system</p>
+
+    <EditForm Model="@registerModel" OnValidSubmit="HandleRegister">
+        <DataAnnotationsValidator />
+
+        @if (!string.IsNullOrEmpty(errorMessage))
+        {
+            <div class="alert alert-danger">
+                @errorMessage
+            </div>
+        }
+
+        <div class="form-group">
+            <label for="username">Full Name</label>
+            <InputText id="username" class="form-control" @bind-Value="registerModel.Username" placeholder="Enter your full name" />
+            <ValidationMessage For="@(() => registerModel.Username)" />
+        </div>
+
+        <div class="form-group">
+            <label for="email">University Email</label>
+            <InputText id="email" class="form-control" @bind-Value="registerModel.Email" placeholder="youremail@lpnu.ua" />
+            <ValidationMessage For="@(() => registerModel.Email)" />
+        </div>
+
+        <div class="form-group">
+            <label for="password">Password</label>
+            <InputText id="password" type="password" class="form-control" @bind-Value="registerModel.Password" placeholder="Create a strong password" />
+            <ValidationMessage For="@(() => registerModel.Password)" />
+        </div>
+
+        <div class="form-group">
+            <label for="confirmPassword">Confirm Password</label>
+            <InputText id="confirmPassword" type="password" class="form-control" @bind-Value="registerModel.ConfirmPassword" placeholder="Confirm your password" />
+            <ValidationMessage For="@(() => registerModel.ConfirmPassword)" />
+        </div>
+
+        <button type="submit" class="btn btn-primary btn-block" disabled="@isLoading">
+            @if (isLoading)
+            {
+                <span>Creating account...</span>
+            }
+            else
+            {
+                <span>Create Account</span>
+            }
+        </button>
+    </EditForm>
+
+    <div class="divider">
+        <span>OR</span>
+    </div>
+
+    <button @onclick="HandleGoogleLogin" class="btn btn-google btn-block" disabled="@isLoading">
+        Continue with Google
+    </button>
+
+    <div class="terms">
+        By creating an account, you agree to our <a href="#">Terms of Service</a> and <a href="#">Privacy Policy</a>.
+    </div>
+
+    <div class="account-links">
+        Already have an account? <a href="/login">Sign in</a>
+    </div>
+</div>
+
+@code {
+    private RegisterRequest registerModel = new RegisterRequest
+        {
+            Username = "",
+            Email = "",
+            Password = "",
+            ConfirmPassword = ""
+        };
+
+    private bool isLoading = false;
+    private string errorMessage = "";
+
+    private async Task HandleRegister()
+    {
+        isLoading = true;
+        errorMessage = "";
+
+        try
+        {
+            var result = await AuthService.RegisterAsync(registerModel);
+
+            if (result)
+            {
+                NavigationManager.NavigateTo("/profile");
+            }
+            else
+            {
+                errorMessage = "Registration failed. Please try again.";
+            }
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"An error occurred: {ex.Message}";
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    private void HandleGoogleLogin()
+    {
+        // Redirect to the Google login endpoint
+        NavigationManager.NavigateTo("/api/google_auth/login?returnUrl=/profile", true);
+    }
+}

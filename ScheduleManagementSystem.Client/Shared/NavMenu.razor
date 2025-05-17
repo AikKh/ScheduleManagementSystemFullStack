@@ -1,0 +1,33 @@
+﻿@inject NavigationManager NavigationManager
+
+<nav class="sidebar-menu">
+    <a href="/profile" class="sidebar-menu-item @NavLinkActive("profile")">
+        <span class="oi oi-home" aria-hidden="true"></span> Home
+    </a>
+    <a href="/calendar" class="sidebar-menu-item @NavLinkActive("calendar")">
+        <span class="oi oi-calendar" aria-hidden="true"></span> Calendar
+    </a>
+    <a href="/groups" class="sidebar-menu-item @NavLinkActive("groups")">
+        <span class="oi oi-people" aria-hidden="true"></span> Groups
+    </a>
+</nav>
+
+@code {
+    private string NavLinkActive(string path)
+    {
+        var currentUri = NavigationManager.Uri;
+        if (currentUri.Contains(path))
+        {
+            return "active";
+        }
+
+        // Special case for profile/home page
+        if (path == "profile" &&
+            (currentUri.EndsWith("/profile") || currentUri.EndsWith("/profile/")))
+        {
+            return "active";
+        }
+
+        return string.Empty;
+    }
+}

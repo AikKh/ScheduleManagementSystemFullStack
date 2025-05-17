@@ -1,0 +1,104 @@
+﻿@page "/profile"
+@attribute [Authorize]
+@inject ScheduleManagementSystem.Client.Services.UserService UserService
+@using Microsoft.AspNetCore.Authorization
+@using ScheduleManagementSystem.Shared.DTOs
+
+<h1>My Profile</h1>
+
+@if (isLoading)
+{
+    <p>Loading profile data...</p>
+}
+else if (user == null)
+{
+    <div class="alert alert-warning">
+        <p>Failed to load profile data. Please try refreshing the page.</p>
+    </div>
+}
+else
+{
+    <div class="profile-header">
+        <div class="profile-avatar">
+            @user.Username[0]
+        </div>
+        <div class="profile-info">
+            <h2>@user.Username</h2>
+            <p>@user.Email</p>
+            <p>Role: @user.Role</p>
+        </div>
+    </div>
+
+    <div class="profile-sections">
+        <div class="profile-section">
+            <h3>My Groups</h3>
+            @if (user.Groups == null || user.Groups.Count == 0)
+            {
+                <p>You are not a member of any groups yet.</p>
+            }
+            else
+            {
+                <ul class="list-group">
+                    @foreach (var group in user.Groups)
+                    {
+                        <li class="list-group-item">
+                            <div class="group-item">
+                                <h4>@group.Name</h4>
+                                <p>@group.Description</p>
+                            </div>
+                        </li>
+                    }
+                </ul>
+            }
+        </div>
+
+        <div class="profile-section">
+            <h3>Account Information</h3>
+            <div class="account-details">
+                <div class="detail-item">
+                    <span class="detail-label">Authentication Methods:</span>
+                    <div class="detail-value">
+                        @foreach (var auth in user.AuthMethods)
+                        {
+                            <span class="auth-badge @auth.Provider.ToString().ToLower()">
+                                @auth.Provider
+                            </span>
+                        }
+                    </div>
+                </div>
+                <div class="detail-item">
+                    <span class="detail-label">Account ID:</span>
+                    <span class="detail-value">@user.Id</span>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    private UserResponseDto user;
+    private bool isLoading = true;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadUserData();
+    }
+
+    private async Task LoadUserData()
+    {
+        isLoading = true;
+
+        try
+        {
+            user = await UserService.GetCurrentUserAsync();
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error loading user data: {ex.Message}");
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+}

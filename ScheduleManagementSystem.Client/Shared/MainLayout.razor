@@ -1,0 +1,77 @@
+﻿@inherits LayoutComponentBase
+@using Microsoft.AspNetCore.Components.Authorization
+@inject AuthenticationStateProvider AuthStateProvider
+@inject NavigationManager NavigationManager
+@inject ScheduleManagementSystem.Client.Services.AuthService AuthService
+
+<div class="page">
+    <AuthorizeView>
+        <Authorized>
+            <!-- Layout for authenticated users -->
+            <div class="sidebar @(_sidebarOpen ? "active" : "")">
+                <div class="sidebar-header">
+                    <div class="logo">Schedule Manager</div>
+                    <div class="university-name">Lviv Polytechnic</div>
+                    <button class="close-button d-md-none" @onclick="ToggleSidebar">
+                        <span class="oi oi-x"></span>
+                    </button>
+                </div>
+
+                <NavMenu />
+            </div>
+
+            <main class="authenticated-main">
+                <div class="top-row px-4">
+                    <button class="mobile-nav-toggle d-md-none" @onclick="ToggleSidebar">
+                        <span class="oi oi-menu"></span>
+                    </button>
+
+                    <div class="user-info">
+                        Welcome, @context.User.Identity.Name!
+                        <button class="btn btn-link" @onclick="LogoutAsync">Logout</button>
+                    </div>
+                </div>
+
+                <article class="content px-4">
+                    @Body
+                </article>
+            </main>
+        </Authorized>
+        <NotAuthorized>
+            <!-- Simple layout for non-authenticated pages -->
+            <div class="auth-container">
+                <header>
+                    <div>
+                        <div class="logo">Schedule Management System</div>
+                        <div class="university-name">Lviv Polytechnic National University</div>
+                    </div>
+                </header>
+
+                <main class="unauthenticated-main">
+                    <div class="content-wrap">
+                        @Body
+                    </div>
+                </main>
+
+                <footer>
+                    &copy; @DateTime.Now.Year Schedule Management System | Lviv Polytechnic National University
+                </footer>
+            </div>
+        </NotAuthorized>
+    </AuthorizeView>
+</div>
+
+@code {
+    private bool _sidebarOpen = false;
+
+    private void ToggleSidebar()
+    {
+        _sidebarOpen = !_sidebarOpen;
+    }
+
+    private async Task LogoutAsync()
+    {
+        await AuthService.LogoutAsync();
+        NavigationManager.NavigateTo("/");
+    }
+}

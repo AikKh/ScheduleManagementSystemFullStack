@@ -1,0 +1,6 @@
+@ScheduleManagementSystem.API_HostAddress = http://localhost:5013
+
+GET {{ScheduleManagementSystem.API_HostAddress}}/api/
+Accept: application/json
+
+###

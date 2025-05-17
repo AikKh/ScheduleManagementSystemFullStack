@@ -1,0 +1,133 @@
+﻿@page "/login"
+@inject ScheduleManagementSystem.Client.Services.AuthService AuthService
+@inject NavigationManager NavigationManager
+@using ScheduleManagementSystem.Shared.Models
+@using System.ComponentModel.DataAnnotations
+
+<div class="card">
+    <h1>Welcome to the University Schedule System</h1>
+    <p class="subtitle">Sign in to access your academic schedule</p>
+
+    <EditForm Model="@loginModel" OnValidSubmit="HandleLogin">
+        <DataAnnotationsValidator />
+
+        @if (!string.IsNullOrEmpty(errorMessage))
+        {
+            <div class="alert alert-danger">
+                @errorMessage
+            </div>
+        }
+
+        <div class="form-group">
+            <label for="email">University Email</label>
+            <InputText id="email" class="form-control" @bind-Value="loginModel.Email" placeholder="youremail@lpnu.ua" />
+            <ValidationMessage For="@(() => loginModel.Email)" />
+        </div>
+
+        <div class="form-group">
+            <label for="password">Password</label>
+            <InputText id="password" type="password" class="form-control" @bind-Value="loginModel.Password" placeholder="Your password" />
+            <ValidationMessage For="@(() => loginModel.Password)" />
+        </div>
+
+        <button type="submit" class="btn btn-primary btn-block" disabled="@isLoading">
+            @if (isLoading)
+            {
+                <span>Signing in...</span>
+            }
+            else
+            {
+                <span>Continue</span>
+            }
+        </button>
+    </EditForm>
+
+    <div class="divider">
+        <span>OR</span>
+    </div>
+
+    <button @onclick="HandleGoogleLogin" class="btn btn-google btn-block" disabled="@isLoading">
+        Continue with Google
+    </button>
+
+    <div class="account-links">
+        Don't have an account? <a href="/register">Sign up</a>
+    </div>
+</div>
+
+@code {
+    private LoginRequest loginModel = new LoginRequest { Email = "", Password = "" };
+    private bool isLoading = false;
+    private string errorMessage = "";
+    private string returnUrl = "";
+
+    protected override void OnInitialized()
+    {
+        var uri = NavigationManager.ToAbsoluteUri(NavigationManager.Uri);
+
+        // Extract returnUrl from query string manually
+        if (uri.Query.Contains("returnUrl="))
+        {
+            var queryString = uri.Query.StartsWith("?") ? uri.Query.Substring(1) : uri.Query;
+            var parameters = queryString.Split('&');
+
+            foreach (var parameter in parameters)
+            {
+                var parts = parameter.Split('=');
+                if (parts.Length == 2 && parts[0] == "returnUrl")
+                {
+                    returnUrl = Uri.UnescapeDataString(parts[1]);
+                    break;
+                }
+            }
+        }
+    }
+
+    private async Task HandleLogin()
+    {
+        isLoading = true;
+        errorMessage = "";
+
+        try
+        {
+            var result = await AuthService.LoginAsync(loginModel);
+
+            if (result)
+            {
+                if (!string.IsNullOrEmpty(returnUrl))
+                {
+                    NavigationManager.NavigateTo(returnUrl);
+                }
+                else
+                {
+                    NavigationManager.NavigateTo("/profile");
+                }
+            }
+            else
+            {
+                errorMessage = "Invalid email or password. Please try again.";
+            }
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"An error occurred: {ex.Message}";
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    private void HandleGoogleLogin()
+    {
+        // Build the return URL
+        var redirectUrl = "/profile";
+        if (!string.IsNullOrEmpty(returnUrl))
+        {
+            redirectUrl = returnUrl;
+        }
+
+        // Redirect to the Google login endpoint
+        NavigationManager.NavigateTo($"/api/google_auth/login?returnUrl={Uri.EscapeDataString(redirectUrl)}", true);
+    }
+}

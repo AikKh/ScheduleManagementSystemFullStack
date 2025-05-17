@@ -1,0 +1,64 @@
+﻿@page "/"
+@inject NavigationManager NavigationManager
+@inject AuthenticationStateProvider AuthStateProvider
+@using ScheduleManagementSystem.Client.Services
+@inject AuthService AuthService
+@using Microsoft.AspNetCore.Components.Authorization
+
+<div class="card welcome-card">
+    <h1>Welcome to the University Schedule System</h1>
+    <p class="subtitle">
+        A comprehensive platform for managing university schedules, events, and academic groups.
+    </p>
+
+    <AuthorizeView>
+        <Authorized>
+            <div class="auth-buttons">
+                <a href="/profile" class="btn btn-primary">Go to Dashboard</a>
+            </div>
+        </Authorized>
+        <NotAuthorized>
+            <div class="auth-buttons">
+                <a href="/login" class="btn btn-primary">Sign In</a>
+                <a href="/register" class="btn btn-secondary">Create Account</a>
+            </div>
+        </NotAuthorized>
+    </AuthorizeView>
+
+    <div class="features">
+        <div class="feature-item">
+            <div class="feature-icon">
+                <span class="oi oi-calendar"></span>
+            </div>
+            <h3>Course Calendar</h3>
+            <p>View and manage all your classes, exams, and academic events in one place.</p>
+        </div>
+
+        <div class="feature-item">
+            <div class="feature-icon">
+                <span class="oi oi-people"></span>
+            </div>
+            <h3>Group Management</h3>
+            <p>Organize students and faculty into academic groups for better coordination.</p>
+        </div>
+
+        <div class="feature-item">
+            <div class="feature-icon">
+                <span class="oi oi-bell"></span>
+            </div>
+            <h3>Notifications</h3>
+            <p>Stay updated with important notifications about schedule changes and events.</p>
+        </div>
+    </div>
+</div>
+
+@code {
+    protected override async Task OnInitializedAsync()
+    {
+        var authState = await AuthStateProvider.GetAuthenticationStateAsync();
+        if (authState.User.Identity.IsAuthenticated)
+        {
+            NavigationManager.NavigateTo("/profile");
+        }
+    }
+}
