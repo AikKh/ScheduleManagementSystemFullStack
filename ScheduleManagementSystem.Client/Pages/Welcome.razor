@@ -1,9 +1,10 @@
 ﻿@page "/"
 @inject NavigationManager NavigationManager
 @inject AuthenticationStateProvider AuthStateProvider
-@using ScheduleManagementSystem.Client.Services
 @inject AuthService AuthService
+@using ScheduleManagementSystem.Client.Services
 @using Microsoft.AspNetCore.Components.Authorization
+@layout AuthLayout // Temporarily using AuthLayout 
 
 <div class="card welcome-card">
     <h1>Welcome to the University Schedule System</h1>
@@ -53,12 +54,5 @@
 </div>
 
 @code {
-    protected override async Task OnInitializedAsync()
-    {
-        var authState = await AuthStateProvider.GetAuthenticationStateAsync();
-        if (authState.User.Identity.IsAuthenticated)
-        {
-            NavigationManager.NavigateTo("/profile");
-        }
-    }
+    // We've removed the redirect to allow access to the welcome page when authenticated
 }

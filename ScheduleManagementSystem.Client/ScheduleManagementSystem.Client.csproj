@@ -16,8 +16,4 @@
     <ProjectReference Include="..\ScheduleManagementSystem.Shared\ScheduleManagementSystem.Shared.csproj" />
   </ItemGroup>
 
-  <ItemGroup>
-    <Folder Include="Handlers\" />
-  </ItemGroup>
-
 </Project>

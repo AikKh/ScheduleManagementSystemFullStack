@@ -1,11 +1,17 @@
 /* Base variables */
 :root {
-    --primary: #0A3161;
-    --secondary: #800000;
-    --accent: #C1A87D;
-    --light: #F5F5F5;
-    --dark: #1A1A1A;
-    --shadow: rgba(0, 0, 0, 0.1);
+    --primary: #0A3161; /* Navy blue for main elements */
+    --primary-light: #1a4275; /* Lighter shade of navy for hover states */
+    --primary-dark: #05234a; /* Darker shade of navy for active states */
+    --secondary: #800000; /* Maroon for secondary elements */
+    --accent: #C1A87D; /* Gold for accents and highlights */
+    --accent-light: #d5c4a1; /* Lighter gold for hover states */
+    --light: #F5F5F5; /* Light gray for backgrounds */
+    --dark: #1A1A1A; /* Dark gray for text */
+    --text-light: #FFFFFF; /* White text for dark backgrounds */
+    --text-muted: rgba(255, 255, 255, 0.8); /* Slightly muted text */
+    --shadow: rgba(0, 0, 0, 0.1); /* Shadow color */
+    --border-light: rgba(255, 255, 255, 0.1); /* Light border color */
 }
 
 /* Reset and base styles */
@@ -483,4 +489,22 @@ footer {
 
 .loading-progress-text:after {
     content: var(--blazor-load-percentage-text, "Loading");
+}
+
+.oi {
+    width: 20px;
+    height: 20px;
+    margin-right: 10px;
+    color: inherit;
+    top: 0;
+    display: inline-block;
+    line-height: 1;
+}
+
+.sidebar-menu-item .oi {
+    color: white;
+}
+
+.sidebar-menu-item.active .oi {
+    color: #ffd700;
 }

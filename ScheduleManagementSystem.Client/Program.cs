@@ -14,24 +14,20 @@ builder.RootComponents.Add<HeadOutlet>("head::after");
 //var apiAddress = Environment.GetEnvironmentVariable("API_URL") ?? "https://localhost:7189/";
 var apiAddress = "https://schedulemanagementsystemfullstack.onrender.com";
 
-// Register LocalStorageService first since BearerTokenHandler depends on it
-builder.Services.AddScoped<ILocalStorageService, LocalStorageService>();
+if (builder.HostEnvironment.IsDevelopment())
+{
+    apiAddress = "https://localhost:7189/";
+}
 
-// Register the BearerTokenHandler
+builder.Services.AddScoped<ILocalStorageService, LocalStorageService>();
 builder.Services.AddScoped<BearerTokenHandler>();
 
-// Register HttpClient with the BearerTokenHandler
 builder.Services.AddScoped(sp => {
-    // Get the handler from the service provider
     var bearerTokenHandler = sp.GetRequiredService<BearerTokenHandler>();
-
-    // Create a standard HttpClientHandler as the inner handler
     var innerHandler = new HttpClientHandler();
 
-    // Set the inner handler
     bearerTokenHandler.InnerHandler = innerHandler;
 
-    // Create and configure the HttpClient with the handler chain
     var httpClient = new HttpClient(bearerTokenHandler)
     {
         BaseAddress = new Uri(apiAddress)

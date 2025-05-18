@@ -1,0 +1,20 @@
+﻿@inherits LayoutComponentBase
+
+<div class="auth-container">
+    <header>
+        <div class="auth-header">
+            <div class="logo">Schedule Management System</div>
+            <div class="university-name">Lviv Polytechnic National University</div>
+        </div>
+    </header>
+
+    <main class="unauthenticated-main">
+        <div class="content-wrap">
+            @Body
+        </div>
+    </main>
+
+    <footer>
+        &copy; @DateTime.Now.Year Schedule Management System | Lviv Polytechnic National University
+    </footer>
+</div>

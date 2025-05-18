@@ -9,12 +9,16 @@ main {
 }
 
 .sidebar {
-    background-image: linear-gradient(180deg, rgb(5, 39, 103) 0%, #3a0647 70%);
+    background-color: var(--primary);
+    box-shadow: 2px 0 10px var(--shadow);
+    height: 100vh;
+    position: sticky;
+    top: 0;
 }
 
 .top-row {
-    background-color: #f7f7f7;
-    border-bottom: 1px solid #d6d5d5;
+    background-color: white;
+    border-bottom: 1px solid var(--shadow);
     justify-content: flex-end;
     height: 3.5rem;
     display: flex;
@@ -27,23 +31,141 @@ main {
         text-decoration: none;
     }
 
-    .top-row ::deep a:hover, .top-row ::deep .btn-link:hover {
-        text-decoration: underline;
+        .top-row ::deep a:hover, .top-row ::deep .btn-link:hover {
+            text-decoration: underline;
+        }
+
+        .top-row ::deep a:first-child {
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+.sidebar-header {
+    background-color: rgba(255, 255, 255, 0.15);
+    padding: 20px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.logo {
+    font-size: 24px;
+    font-weight: 700;
+    color: white;
+    text-align: center;
+}
+
+.university-name {
+    font-size: 18px;
+    color: #ffd700; /* Brighter gold color for better visibility */
+    margin-top: 5px;
+    font-weight: 500;
+}
+
+.sidebar-menu {
+    padding: 20px 0;
+}
+
+.sidebar-menu-item {
+    padding: 12px 20px;
+    display: flex;
+    align-items: center;
+    color: white; /* Solid white for better visibility */
+    text-decoration: none;
+    transition: all 0.2s ease;
+    position: relative;
+    border-left: 3px solid transparent;
+    margin: 4px 0;
+    font-weight: 500; /* Added font weight for better visibility */
+}
+
+    .sidebar-menu-item.active {
+        background-color: rgba(255, 255, 255, 0.2);
+        color: white;
+        border-left: 3px solid #ffd700; /* Brighter gold */
+        font-weight: 600; /* Bolder when active */
     }
 
-    .top-row ::deep a:first-child {
-        overflow: hidden;
-        text-overflow: ellipsis;
+    .sidebar-menu-item:hover {
+        background-color: rgba(255, 255, 255, 0.15);
+        color: white;
     }
+
+    .sidebar-menu-item span {
+        margin-right: 12px;
+        width: 20px;
+        text-align: center;
+        color: white; /* Ensure icon is visible */
+    }
+
+.user-info {
+    display: flex;
+    align-items: center;
+}
+
+    .user-info button {
+        margin-left: 10px;
+        color: var(--primary);
+    }
+
+.close-button {
+    background: none;
+    border: none;
+    color: white;
+    font-size: 18px;
+    position: absolute;
+    top: 15px;
+    right: 15px;
+    cursor: pointer;
+}
+
+.mobile-nav-toggle {
+    background: none;
+    border: none;
+    color: var(--primary);
+    font-size: 24px;
+    cursor: pointer;
+}
+
+/* Auth container for unauthenticated layout */
+.auth-container {
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+}
+
+    .auth-container header {
+        padding: 20px;
+        background-color: white;
+        box-shadow: 0 2px 10px var(--shadow);
+        display: flex;
+        justify-content: center;
+        text-align: center;
+    }
+
+.unauthenticated-main {
+    flex: 1;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 40px 20px;
+}
+
+.content-wrap {
+    width: 100%;
+    max-width: 800px;
+}
 
 @media (max-width: 640.98px) {
     .top-row {
         justify-content: space-between;
     }
 
-    .top-row ::deep a, .top-row ::deep .btn-link {
-        margin-left: 0;
-    }
+        .top-row ::deep a, .top-row ::deep .btn-link {
+            margin-left: 0;
+        }
 }
 
 @media (min-width: 641px) {
@@ -64,14 +186,48 @@ main {
         z-index: 1;
     }
 
-    .top-row.auth ::deep a:first-child {
-        flex: 1;
-        text-align: right;
-        width: 0;
-    }
+        .top-row.auth ::deep a:first-child {
+            flex: 1;
+            text-align: right;
+            width: 0;
+        }
 
     .top-row, article {
         padding-left: 2rem !important;
         padding-right: 1.5rem !important;
+    }
+}
+
+@media (max-width: 768px) {
+    .sidebar {
+        transform: translateX(-100%);
+    }
+
+        .sidebar.active {
+            transform: translateX(0);
+            width: 80%;
+            max-width: 300px;
+        }
+
+    main {
+        margin-left: 0;
+    }
+
+    .mobile-nav-toggle {
+        display: block;
+    }
+}
+
+@media (min-width: 769px) {
+    main {
+        margin-left: 250px;
+    }
+
+    .mobile-nav-toggle {
+        display: none;
+    }
+
+    .close-button {
+        display: none;
     }
 }
