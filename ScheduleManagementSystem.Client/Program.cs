@@ -11,7 +11,7 @@ var builder = WebAssemblyHostBuilder.CreateDefault(args);
 builder.RootComponents.Add<App>("#app");
 builder.RootComponents.Add<HeadOutlet>("head::after");
 
-var apiAddress = "https://localhost:7189/";
+var apiAddress = Environment.GetEnvironmentVariable("API_URL") ?? "https://localhost:7189/";
 
 // Register LocalStorageService first since BearerTokenHandler depends on it
 builder.Services.AddScoped<ILocalStorageService, LocalStorageService>();
