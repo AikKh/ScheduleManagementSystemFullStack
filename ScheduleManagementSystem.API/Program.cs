@@ -13,7 +13,7 @@ builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowBlazorApp", policy =>
     {
-        policy.WithOrigins("https://localhost:7273", "http://localhost:5051") // Replace with your Blazor app's URLs
+        policy.WithOrigins("https://localhost:7273", "https://schedulemanagementsystemfullstackclient.onrender.com") // Replace with your Blazor app's URLs
               .AllowAnyMethod()
               .AllowAnyHeader();
     });
