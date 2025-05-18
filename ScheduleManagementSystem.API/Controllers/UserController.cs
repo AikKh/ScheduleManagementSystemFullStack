@@ -1,13 +1,8 @@
-﻿using Microsoft.AspNetCore.Cors.Infrastructure;
-using Microsoft.AspNetCore.Mvc;
-using ScheduleManagementSystem.API.Data;
+﻿using Microsoft.AspNetCore.Mvc;
 using ScheduleManagementSystem.Shared.DTOs;
-using ScheduleManagementSystem.API.Models;
 using ScheduleManagementSystem.API.Services;
 using Microsoft.AspNetCore.Authorization;
 using System.Security.Claims;
-using System.Data;
-using System.IdentityModel.Tokens.Jwt;
 
 namespace ScheduleManagementSystem.API.Controllers;
 

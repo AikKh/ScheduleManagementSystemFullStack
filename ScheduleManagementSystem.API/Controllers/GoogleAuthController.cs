@@ -2,7 +2,6 @@
 using Microsoft.AspNetCore.Mvc;
 using ScheduleManagementSystem.API.Services;
 using System.Security.Claims;
-using System;
 
 namespace ScheduleManagementSystem.API.Controllers;
 

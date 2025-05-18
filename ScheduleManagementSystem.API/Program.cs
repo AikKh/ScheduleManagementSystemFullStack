@@ -1,12 +1,9 @@
-using System;
 using Microsoft.EntityFrameworkCore;
 using ScheduleManagementSystem.API.Data;
 using ScheduleManagementSystem.API.Services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
-using Microsoft.AspNetCore.Authentication.Google;
-using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication.OAuth;
 using System.Security.Claims;
 

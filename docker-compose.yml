@@ -1,0 +1,6 @@
+services:
+  schedulemanagementsystem.api:
+    image: ${DOCKER_REGISTRY-}schedulemanagementsystemapi
+    build:
+      context: .
+      dockerfile: ScheduleManagementSystem.API/Dockerfile
