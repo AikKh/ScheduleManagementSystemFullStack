@@ -1,28 +1,131 @@
+/* Navigation Menu Styles */
+.sidebar-menu {
+    padding: 20px 0;
+    display: flex;
+    flex-direction: column;
+}
+
+.sidebar-menu-item {
+    padding: 15px 20px;
+    display: flex;
+    align-items: center;
+    color: rgba(255, 255, 255, 0.8);
+    text-decoration: none;
+    transition: all 0.2s ease;
+    position: relative;
+    margin: 2px 10px;
+    border-radius: 8px;
+    font-weight: 500;
+    font-size: 15px;
+}
+
+    .sidebar-menu-item:hover {
+        background-color: rgba(255, 255, 255, 0.1);
+        color: white;
+        text-decoration: none;
+    }
+
+    .sidebar-menu-item.active {
+        background-color: var(--accent) !important;
+        color: var(--primary-dark) !important;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+    }
+
+    .sidebar-menu-item .oi {
+        margin-right: 12px;
+        width: 20px;
+        text-align: center;
+        font-size: 16px;
+        color: inherit;
+    }
+
+/* NavLink specific overrides */
+::deep .sidebar-menu-item {
+    color: rgba(255, 255, 255, 0.8) !important;
+    text-decoration: none !important;
+}
+
+    ::deep .sidebar-menu-item:hover {
+        color: white !important;
+        text-decoration: none !important;
+    }
+
+    ::deep .sidebar-menu-item.active {
+        background-color: var(--accent) !important;
+        color: var(--primary-dark) !important;
+    }
+
+        ::deep .sidebar-menu-item.active .oi {
+            color: var(--primary-dark) !important;
+        }
+
+/* Remove any conflicting Bootstrap Icon styles */
+.bi {
+    display: none;
+}
+
+/* Navbar and top-row overrides */
 .navbar-toggler {
     background-color: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    color: white;
 }
 
 .top-row {
-    min-height: 3.5rem;
-    background-color: rgba(0,0,0,0.4);
+    min-height: 60px;
+    background-color: white;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 20px;
 }
 
 .navbar-brand {
-    font-size: 1.1rem;
+    font-size: 1.2rem;
+    font-weight: 600;
+    color: var(--primary);
 }
 
-.nav-scrollable {
-    height: calc(100vh - 3.5rem);
-    overflow-y: auto;
+/* Navigation items container */
+.nav-item {
+    margin: 0;
+    padding: 0;
 }
 
+    .nav-item:first-of-type {
+        padding-top: 0;
+    }
+
+    .nav-item:last-of-type {
+        padding-bottom: 0;
+    }
+
+/* Mobile responsive */
 @media (min-width: 641px) {
     .navbar-toggler {
         display: none;
     }
 
     .collapse {
-        /* Never collapse the sidebar for wide screens */
-        display: block;
+        display: block !important;
     }
+
+    .nav-scrollable {
+        height: calc(100vh - 60px);
+        overflow-y: auto;
+    }
+}
+
+@media (max-width: 640px) {
+    .sidebar-menu-item {
+        margin: 2px 5px;
+        padding: 12px 15px;
+        font-size: 14px;
+    }
+
+        .sidebar-menu-item .oi {
+            margin-right: 10px;
+            font-size: 14px;
+        }
 }

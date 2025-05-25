@@ -58,6 +58,13 @@ namespace ScheduleManagementSystem.API.Data
                 .HasIndex(a => new { a.UserId, a.Provider })
                 .IsUnique()
                 .HasDatabaseName("IX_UserProvider");
+
+            //modelBuilder.Entity<Event>()
+            //    .Property(e => e.Date)
+            //    .HasConversion(
+            //        v => v.Kind == DateTimeKind.Utc ? v : DateTime.SpecifyKind(v, DateTimeKind.Utc),
+            //        v => DateTime.SpecifyKind(v, DateTimeKind.Utc)
+            //    );
         }
     }
 }

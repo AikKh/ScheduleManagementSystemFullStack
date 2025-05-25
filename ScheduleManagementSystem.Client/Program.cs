@@ -6,6 +6,7 @@ using ScheduleManagementSystem.Client.Providers;
 using ScheduleManagementSystem.Client.Services;
 using System;
 using System.Net.Http;
+using System.Text.RegularExpressions;
 
 var builder = WebAssemblyHostBuilder.CreateDefault(args);
 builder.RootComponents.Add<App>("#app");
@@ -43,5 +44,7 @@ builder.Services.AddAuthorizationCore();
 // Register services
 builder.Services.AddScoped<AuthService>();
 builder.Services.AddScoped<UserService>();
+builder.Services.AddScoped<EventService>();
+builder.Services.AddScoped<GroupService>();
 
 await builder.Build().RunAsync();

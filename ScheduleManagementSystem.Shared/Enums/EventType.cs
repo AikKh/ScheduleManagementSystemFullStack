@@ -9,9 +9,9 @@ namespace ScheduleManagementSystem.Shared.Enums;
 public enum EventType
 {
     Lecture,
-    Lab,
     Seminar,
     Practice,
+    Laboratory,
     Exam,
     Other
 }

@@ -20,3 +20,20 @@ public class GroupResponseDto : GroupSummaryDto
 
     public List<EventSummaryDto> Events { get; set; } = [];
 }
+
+public class GroupCreateDto
+{
+    [Required, StringLength(100)]
+    public required string Name { get; set; }
+
+    [Required]
+    public required string Description { get; set; }
+}
+
+public class GroupUpdateDto
+{
+    [StringLength(100)]
+    public string? Name { get; set; }
+
+    public string? Description { get; set; }
+}

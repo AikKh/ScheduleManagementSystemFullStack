@@ -1,0 +1,306 @@
+﻿@page "/groups"
+@attribute [Authorize]
+@inject GroupService GroupService
+@inject UserService UserService
+@using Microsoft.AspNetCore.Authorization
+@using ScheduleManagementSystem.Shared.DTOs
+@using ScheduleManagementSystem.Client.Services
+
+<div class="groups-container">
+    <div class="groups-header">
+        <div class="groups-title">
+            <h1>Academic Groups</h1>
+            <p class="subtitle">Manage your group memberships and collaborations</p>
+        </div>
+
+        @if (isTeacher)
+        {
+            <button class="btn btn-primary" @onclick="ShowCreateGroupModal">
+                <span class="oi oi-plus"></span> Create Group
+            </button>
+        }
+    </div>
+
+    @if (isLoading)
+    {
+        <div class="loading-container">
+            <p>Loading groups...</p>
+        </div>
+    }
+    else
+    {
+        <div class="groups-section">
+            <h2>My Groups</h2>
+            @if (userGroups.Count == 0)
+            {
+                <div class="empty-state">
+                    <span class="oi oi-people empty-icon"></span>
+                    <p>You are not a member of any groups yet.</p>
+                    <p>Join existing groups or create new ones to start collaborating.</p>
+                </div>
+            }
+            else
+            {
+                <div class="groups-grid">
+                    @foreach (var group in userGroups)
+                    {
+                        <div class="group-card">
+                            <div class="group-header">
+                                <h3>@group.Name</h3>
+                                <button class="btn btn-secondary btn-sm" @onclick="() => ViewGroupDetails(group.Id)">
+                                    View Details
+                                </button>
+                            </div>
+                            <p class="group-description">@group.Description</p>
+                            <div class="group-actions">
+                                <button class="btn btn-outline-danger btn-sm" @onclick="() => LeaveGroup(group.Id)">
+                                    Leave Group
+                                </button>
+                            </div>
+                        </div>
+                    }
+                </div>
+            }
+        </div>
+
+        <div class="groups-section">
+            <div class="section-header">
+                <h2>Discover Groups</h2>
+                <div class="search-container">
+                    <input type="text" @bind="searchQuery" @oninput="OnSearchInput"
+                           class="form-control" placeholder="Search groups..." />
+                </div>
+            </div>
+
+            @if (allGroups.Count == 0)
+            {
+                <p>No groups available to join.</p>
+            }
+            else
+            {
+                <div class="groups-grid">
+                    @foreach (var group in filteredGroups)
+                    {
+                        <div class="group-card @(userGroups.Any(ug => ug.Id == group.Id) ? "joined" : "")">
+                            <div class="group-header">
+                                <h3>@group.Name</h3>
+                                @if (userGroups.Any(ug => ug.Id == group.Id))
+                                {
+                                    <span class="badge joined-badge">Joined</span>
+                                }
+                                else
+                                {
+                                    <button class="btn btn-primary btn-sm" @onclick="() => JoinGroup(group.Id)">
+                                        Join
+                                    </button>
+                                }
+                            </div>
+                            <p class="group-description">@group.Description</p>
+                        </div>
+                    }
+                </div>
+            }
+        </div>
+    }
+</div>
+
+<!-- Create Group Modal -->
+@if (showCreateGroupModal)
+{
+    <div class="modal-overlay" @onclick="CloseCreateGroupModal">
+        <div class="modal-content" @onclick:stopPropagation="true">
+            <div class="modal-header">
+                <h3>Create New Group</h3>
+                <button class="close-btn" @onclick="CloseCreateGroupModal">&times;</button>
+            </div>
+
+            <div class="modal-body">
+                <EditForm Model="@groupForm" OnValidSubmit="CreateGroup">
+                    <DataAnnotationsValidator />
+
+                    @if (!string.IsNullOrEmpty(groupErrorMessage))
+                    {
+                        <div class="alert alert-danger">@groupErrorMessage</div>
+                    }
+
+                    <div class="form-group">
+                        <label for="groupName">Group Name</label>
+                        <InputText id="groupName" @bind-Value="groupForm.Name" class="form-control" placeholder="Enter group name" />
+                        <ValidationMessage For="@(() => groupForm.Name)" />
+                    </div>
+
+                    <div class="form-group">
+                        <label for="groupDescription">Description</label>
+                        <InputTextArea id="groupDescription" @bind-Value="groupForm.Description" class="form-control"
+                                       placeholder="Describe the purpose of this group" rows="4" />
+                        <ValidationMessage For="@(() => groupForm.Description)" />
+                    </div>
+
+                    <div class="modal-actions">
+                        <button type="submit" class="btn btn-primary" disabled="@isSubmitting">
+                            @if (isSubmitting)
+                            {
+                                <span>Creating...</span>
+                            }
+                            else
+                            {
+                                <span>Create Group</span>
+                            }
+                        </button>
+                        <button type="button" class="btn btn-secondary" @onclick="CloseCreateGroupModal">Cancel</button>
+                    </div>
+                </EditForm>
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    private List<GroupSummaryDto> userGroups = new();
+    private List<GroupSummaryDto> allGroups = new();
+    private List<GroupSummaryDto> filteredGroups = new();
+    private bool isLoading = true;
+    private bool isTeacher = false;
+    private string searchQuery = "";
+
+    // Create group modal
+    private bool showCreateGroupModal = false;
+    private GroupCreateDto groupForm = new() { Name = "", Description = "" };
+    private string groupErrorMessage = "";
+    private bool isSubmitting = false;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadData();
+    }
+
+    private async Task LoadData()
+    {
+        isLoading = true;
+
+        try
+        {
+            // Load user data to check role and get groups
+            var user = await UserService.GetCurrentUserAsync();
+            if (user != null)
+            {
+                isTeacher = user.Role.Equals("Teacher", StringComparison.OrdinalIgnoreCase);
+                userGroups = user.Groups ?? new List<GroupSummaryDto>();
+            }
+
+            // Load all available groups
+            allGroups = await GroupService.GetAllGroupsAsync();
+            filteredGroups = allGroups.ToList();
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error loading groups data: {ex.Message}");
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    private void OnSearchInput(ChangeEventArgs e)
+    {
+        searchQuery = e.Value?.ToString() ?? "";
+        FilterGroups();
+    }
+
+    private void FilterGroups()
+    {
+        if (string.IsNullOrWhiteSpace(searchQuery))
+        {
+            filteredGroups = allGroups.ToList();
+        }
+        else
+        {
+            filteredGroups = allGroups.Where(g =>
+                g.Name.Contains(searchQuery, StringComparison.OrdinalIgnoreCase) ||
+                g.Description.Contains(searchQuery, StringComparison.OrdinalIgnoreCase)
+            ).ToList();
+        }
+    }
+
+    private async Task JoinGroup(int groupId)
+    {
+        try
+        {
+            var success = await GroupService.JoinGroupAsync(groupId);
+            if (success)
+            {
+                await LoadData(); // Refresh the data
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error joining group: {ex.Message}");
+        }
+    }
+
+    private async Task LeaveGroup(int groupId)
+    {
+        try
+        {
+            var success = await GroupService.LeaveGroupAsync(groupId);
+            if (success)
+            {
+                await LoadData(); // Refresh the data
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error leaving group: {ex.Message}");
+        }
+    }
+
+    private void ViewGroupDetails(int groupId)
+    {
+        // This could navigate to a detailed group page or show a modal
+        // For now, just log the action
+        Console.WriteLine($"Viewing details for group {groupId}");
+    }
+
+    private void ShowCreateGroupModal()
+    {
+        groupForm = new GroupCreateDto { Name = "", Description = "" };
+        groupErrorMessage = "";
+        showCreateGroupModal = true;
+    }
+
+    private void CloseCreateGroupModal()
+    {
+        showCreateGroupModal = false;
+        groupForm = new GroupCreateDto { Name = "", Description = "" };
+        groupErrorMessage = "";
+    }
+
+    private async Task CreateGroup()
+    {
+        isSubmitting = true;
+        groupErrorMessage = "";
+
+        try
+        {
+            var newGroup = await GroupService.CreateGroupAsync(groupForm);
+            if (newGroup != null)
+            {
+                await LoadData(); // Refresh the data
+                CloseCreateGroupModal();
+            }
+            else
+            {
+                groupErrorMessage = "Failed to create group. Please try again.";
+            }
+        }
+        catch (Exception ex)
+        {
+            groupErrorMessage = $"An error occurred: {ex.Message}";
+        }
+        finally
+        {
+            isSubmitting = false;
+        }
+    }
+}

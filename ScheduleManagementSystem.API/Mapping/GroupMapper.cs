@@ -34,7 +34,8 @@ public static class GroupMapper
             Id = group.Id,
             Name = group.Name,
             Description = group.Description,
-            Users = group.Users.Select(UserMapper.ToUserSummaryDto).ToList()
+            Users = group.Users.Select(UserMapper.ToUserSummaryDto).ToList(),
+            Events = group.Events.Select(EventMapper.ToEventSummaryDto).ToList()
         };
     }
 

@@ -27,7 +27,7 @@
                     </button>
 
                     <div class="user-info">
-                        Welcome, @context.User.Identity.Name!
+                        Welcome, @GetUserDisplayName(context)!
                         <button class="btn btn-link" @onclick="LogoutAsync">Logout</button>
                     </div>
                 </div>
@@ -73,5 +73,27 @@
     {
         await AuthService.LogoutAsync();
         NavigationManager.NavigateTo("/");
+    }
+
+    private string GetUserDisplayName(AuthenticationState authState)
+    {
+        // First try to get the name claim
+        var nameClaim = authState.User.FindFirst(System.Security.Claims.ClaimTypes.Name)?.Value;
+        if (!string.IsNullOrEmpty(nameClaim))
+        {
+            return nameClaim;
+        }
+
+        // If no name claim, try to get email
+        var emailClaim = authState.User.FindFirst(System.Security.Claims.ClaimTypes.Email)?.Value;
+        if (!string.IsNullOrEmpty(emailClaim))
+        {
+            // Return just the part before @ for cleaner display
+            var emailParts = emailClaim.Split('@');
+            return emailParts.Length > 0 ? emailParts[0] : emailClaim;
+        }
+
+        // Fallback to "User" if no claims found
+        return "User";
     }
 }

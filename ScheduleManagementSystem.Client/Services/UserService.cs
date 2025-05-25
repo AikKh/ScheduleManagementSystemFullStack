@@ -25,16 +25,4 @@ public class UserService(HttpClient httpClient)
             return null;
         }
     }
-
-    public async Task<UserResponseDto> GetUserByIdAsync(int id)
-    {
-        try
-        {
-            return await _httpClient.GetFromJsonAsync<UserResponseDto>($"api/user/{id}");
-        }
-        catch
-        {
-            return null;
-        }
-    }
 }

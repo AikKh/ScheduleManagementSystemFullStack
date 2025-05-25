@@ -57,13 +57,13 @@ namespace ScheduleManagementSystem.Client.Providers
                 claims.Add(new Claim(ClaimTypes.Email, sub.ToString()));
             }
 
-            keyValuePairs.TryGetValue("name", out var name);
+            keyValuePairs.TryGetValue(ClaimTypes.Name, out var name);
             if (name != null)
             {
                 claims.Add(new Claim(ClaimTypes.Name, name.ToString()));
             }
 
-            keyValuePairs.TryGetValue("role", out var role);
+            keyValuePairs.TryGetValue(ClaimTypes.Role, out var role);
             if (role != null)
             {
                 claims.Add(new Claim(ClaimTypes.Role, role.ToString()));

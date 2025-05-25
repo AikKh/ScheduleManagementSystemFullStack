@@ -30,6 +30,8 @@ builder.Services.AddDbContext<AppDbContext>(options =>
 builder.Services.AddScoped<UserService>();
 builder.Services.AddScoped<AuthService>();
 builder.Services.AddScoped<JwtService>();
+builder.Services.AddScoped<EventService>();
+builder.Services.AddScoped<GroupService>();
 
 // Local auth
 builder.Services.AddAuthentication(options =>

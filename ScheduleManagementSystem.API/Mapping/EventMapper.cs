@@ -19,20 +19,6 @@ namespace ScheduleManagementSystem.API.Mapping
             };
         }
 
-        public static Event FromEventUpdateDto(EventUpdateDto eventDto)
-        {
-            return new Event
-            {
-                Title = eventDto.Title,
-                Description = eventDto.Description,
-                Date = eventDto.Date,
-                StartTime = eventDto.StartTime,
-                EndTime = eventDto.EndTime,
-                Type = eventDto.Type,
-                GroupId = eventDto.GroupId
-            };
-        }
-
         public static Event FromEventSummaryDto(EventSummaryDto eventDto)
         {
             return new Event
@@ -46,17 +32,6 @@ namespace ScheduleManagementSystem.API.Mapping
                 Type = eventDto.Type,
                 GroupId = eventDto.GroupId
             };
-        }
-
-        public static void UpdateEventFromDto(Event eventEntity, EventUpdateDto eventDto)
-        {
-            eventEntity.Title = eventDto.Title;
-            eventEntity.Description = eventDto.Description;
-            eventEntity.Date = eventDto.Date;
-            eventEntity.StartTime = eventDto.StartTime;
-            eventEntity.EndTime = eventDto.EndTime;
-            eventEntity.Type = eventDto.Type;
-            eventEntity.GroupId = eventDto.GroupId;
         }
 
         public static EventSummaryDto ToEventSummaryDto(Event eventEntity)
