@@ -86,7 +86,12 @@
                                 <h3>@group.Name</h3>
                                 @if (userGroups.Any(ug => ug.Id == group.Id))
                                 {
-                                    <span class="badge joined-badge">Joined</span>
+                                    <div class="group-header-actions">
+                                        <span class="badge joined-badge">Joined</span>
+                                        <button class="btn btn-secondary btn-sm" @onclick="() => ViewGroupDetails(group.Id)">
+                                            View Details
+                                        </button>
+                                    </div>
                                 }
                                 else
                                 {
@@ -155,6 +160,131 @@
     </div>
 }
 
+<!-- Group Details Modal -->
+@if (showGroupDetailsModal && selectedGroupDetails != null)
+{
+    <div class="modal-overlay" @onclick="CloseGroupDetailsModal">
+        <div class="modal-content group-details-modal" @onclick:stopPropagation="true">
+            <div class="modal-header">
+                <h3>@selectedGroupDetails.Name</h3>
+                <button class="close-btn" @onclick="CloseGroupDetailsModal">&times;</button>
+            </div>
+
+            <div class="modal-body">
+                @if (isLoadingGroupDetails)
+                {
+                    <div class="loading-container">
+                        <p>Loading group details...</p>
+                    </div>
+                }
+                else
+                {
+                    <div class="group-details">
+                        <div class="detail-section">
+                            <h4>Description</h4>
+                            <p class="group-detail-description">@selectedGroupDetails.Description</p>
+                        </div>
+
+                        <div class="detail-section">
+                            <h4>Members (@selectedGroupDetails.Users.Count)</h4>
+                            @if (selectedGroupDetails.Users.Count == 0)
+                            {
+                                <p class="no-data">No members in this group yet.</p>
+                            }
+                            else
+                            {
+                                <div class="members-list">
+                                    @foreach (var user in selectedGroupDetails.Users)
+                                    {
+                                        <div class="member-item">
+                                            <div class="member-avatar">
+                                                @user.Username[0]
+                                            </div>
+                                            <div class="member-info">
+                                                <div class="member-name">@user.Username</div>
+                                                <div class="member-email">@user.Email</div>
+                                                <div class="member-role">@user.Role</div>
+                                            </div>
+                                        </div>
+                                    }
+                                </div>
+                            }
+                        </div>
+
+                        <div class="detail-section">
+                            <h4>Upcoming Events (@selectedGroupDetails.Events.Count)</h4>
+                            @if (selectedGroupDetails.Events.Count == 0)
+                            {
+                                <p class="no-data">No upcoming events for this group.</p>
+                            }
+                            else
+                            {
+                                <div class="events-list">
+                                    @foreach (var eventItem in selectedGroupDetails.Events.OrderBy(e => e.Date).Take(5))
+                                    {
+                                        <div class="event-item">
+                                            <div class="event-type-indicator @eventItem.Type.ToString().ToLower()"></div>
+                                            <div class="event-info">
+                                                <div class="event-title">@eventItem.Title</div>
+                                                <div class="event-datetime">
+                                                    @eventItem.Date.ToString("MMM dd, yyyy") at @eventItem.StartTime.ToString(@"hh\:mm")
+                                                </div>
+                                                <div class="event-type">@eventItem.Type</div>
+                                            </div>
+                                        </div>
+                                    }
+                                    @if (selectedGroupDetails.Events.Count > 5)
+                                    {
+                                        <p class="more-events">And @(selectedGroupDetails.Events.Count - 5) more events...</p>
+                                    }
+                                </div>
+                            }
+                        </div>
+
+                        <div class="detail-section">
+                            <h4>Group Statistics</h4>
+                            <div class="stats-grid">
+                                <div class="stat-item">
+                                    <div class="stat-number">@selectedGroupDetails.Users.Count</div>
+                                    <div class="stat-label">Total Members</div>
+                                </div>
+                                <div class="stat-item">
+                                    <div class="stat-number">@selectedGroupDetails.Events.Count</div>
+                                    <div class="stat-label">Total Events</div>
+                                </div>
+                                <div class="stat-item">
+                                    <div class="stat-number">@selectedGroupDetails.Events.Count(e => e.Date >= DateTime.Today)</div>
+                                    <div class="stat-label">Upcoming Events</div>
+                                </div>
+                                <div class="stat-item">
+                                    <div class="stat-number">@selectedGroupDetails.Users.Count(u => u.Role == "Teacher")</div>
+                                    <div class="stat-label">Teachers</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="modal-actions">
+                        @if (userGroups.Any(ug => ug.Id == selectedGroupDetails.Id))
+                        {
+                            <button class="btn btn-outline-danger" @onclick="() => LeaveGroup(selectedGroupDetails.Id)">
+                                Leave Group
+                            </button>
+                        }
+                        else
+                        {
+                            <button class="btn btn-primary" @onclick="() => JoinGroup(selectedGroupDetails.Id)">
+                                Join Group
+                            </button>
+                        }
+                        <button class="btn btn-secondary" @onclick="CloseGroupDetailsModal">Close</button>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+}
+
 @code {
     private List<GroupSummaryDto> userGroups = new();
     private List<GroupSummaryDto> allGroups = new();
@@ -168,6 +298,11 @@
     private GroupCreateDto groupForm = new() { Name = "", Description = "" };
     private string groupErrorMessage = "";
     private bool isSubmitting = false;
+
+    // Group details modal
+    private bool showGroupDetailsModal = false;
+    private GroupResponseDto? selectedGroupDetails = null;
+    private bool isLoadingGroupDetails = false;
 
     protected override async Task OnInitializedAsync()
     {
@@ -223,6 +358,33 @@
         }
     }
 
+    private async Task ViewGroupDetails(int groupId)
+    {
+        isLoadingGroupDetails = true;
+        showGroupDetailsModal = true;
+        selectedGroupDetails = null;
+
+        try
+        {
+            selectedGroupDetails = await GroupService.GetGroupByIdAsync(groupId);
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error loading group details: {ex.Message}");
+        }
+        finally
+        {
+            isLoadingGroupDetails = false;
+        }
+    }
+
+    private void CloseGroupDetailsModal()
+    {
+        showGroupDetailsModal = false;
+        selectedGroupDetails = null;
+        isLoadingGroupDetails = false;
+    }
+
     private async Task JoinGroup(int groupId)
     {
         try
@@ -231,6 +393,12 @@
             if (success)
             {
                 await LoadData(); // Refresh the data
+
+                // If group details modal is open and it's the same group, refresh it
+                if (showGroupDetailsModal && selectedGroupDetails?.Id == groupId)
+                {
+                    await ViewGroupDetails(groupId);
+                }
             }
         }
         catch (Exception ex)
@@ -247,19 +415,18 @@
             if (success)
             {
                 await LoadData(); // Refresh the data
+
+                // If group details modal is open and it's the same group, refresh it
+                if (showGroupDetailsModal && selectedGroupDetails?.Id == groupId)
+                {
+                    await ViewGroupDetails(groupId);
+                }
             }
         }
         catch (Exception ex)
         {
             Console.WriteLine($"Error leaving group: {ex.Message}");
         }
-    }
-
-    private void ViewGroupDetails(int groupId)
-    {
-        // This could navigate to a detailed group page or show a modal
-        // For now, just log the action
-        Console.WriteLine($"Viewing details for group {groupId}");
     }
 
     private void ShowCreateGroupModal()
