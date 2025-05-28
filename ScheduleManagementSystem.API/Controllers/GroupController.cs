@@ -14,7 +14,7 @@ public class GroupController(GroupService groupService) : ControllerBase
 {
     private readonly GroupService _groupService = groupService;
 
-    [Authorize(Roles = "Student,Teacher")]
+    [Authorize]
     [HttpGet]
     public async Task<ActionResult<List<GroupSummaryDto>>> GetUserGroups()
     {
@@ -54,7 +54,7 @@ public class GroupController(GroupService groupService) : ControllerBase
         }
     }
 
-    [Authorize(Roles = "Student,Teacher")]
+    [Authorize]
     [HttpGet("{id:int}")]
     public async Task<ActionResult<GroupResponseDto>> GetGroupById(int id)
     {
@@ -73,7 +73,7 @@ public class GroupController(GroupService groupService) : ControllerBase
         }
     }
 
-    [Authorize(Roles = "Student,Teacher")]
+    [Authorize]
     [HttpGet("search")]
     public async Task<ActionResult<List<GroupSummaryDto>>> SearchGroups([FromQuery] string name)
     {
@@ -197,7 +197,7 @@ public class GroupController(GroupService groupService) : ControllerBase
         }
     }
 
-    [Authorize(Roles = "Student,Teacher")]
+    [Authorize]
     [HttpPost("{id:int}/join")]
     public async Task<ActionResult> JoinGroup(int id)
     {
@@ -226,7 +226,7 @@ public class GroupController(GroupService groupService) : ControllerBase
         }
     }
 
-    [Authorize(Roles = "Student,Teacher")]
+    [Authorize]
     [HttpPost("{id:int}/leave")]
     public async Task<ActionResult> LeaveGroup(int id)
     {

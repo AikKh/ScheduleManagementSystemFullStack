@@ -1,0 +1,742 @@
+﻿@page "/settings"
+@attribute [Authorize]
+@inject UserService UserService
+@inject AuthService AuthService
+@inject NavigationManager NavigationManager
+@using Microsoft.AspNetCore.Authorization
+@using ScheduleManagementSystem.Shared.DTOs
+@using ScheduleManagementSystem.Shared.Models
+@using ScheduleManagementSystem.Shared.Enums
+
+<div class="settings-container">
+    <div class="settings-header">
+        <h1>Account Settings</h1>
+        <p class="subtitle">Manage your account preferences and information</p>
+    </div>
+
+    @if (isLoading)
+    {
+        <div class="loading-container">
+            <p>Loading settings...</p>
+        </div>
+    }
+    else if (user == null)
+    {
+        <div class="alert alert-warning">
+            <p>Failed to load user data. Please try refreshing the page.</p>
+        </div>
+    }
+    else
+    {
+        <div class="settings-sections">
+            <!-- Profile Information Section -->
+            <div class="settings-section">
+                <div class="section-header">
+                    <h2>Profile Information</h2>
+                    <p>Update your basic account information</p>
+                </div>
+
+                <EditForm Model="@profileForm" OnValidSubmit="UpdateProfile">
+                    <DataAnnotationsValidator />
+
+                    @if (!string.IsNullOrEmpty(profileMessage))
+                    {
+                        <div class="alert @(profileSuccess ? "alert-success" : "alert-danger")">
+                            @profileMessage
+                        </div>
+                    }
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="username">Full Name</label>
+                            <InputText id="username" @bind-Value="profileForm.Username" class="form-control" placeholder="Enter your full name" />
+                            <ValidationMessage For="@(() => profileForm.Username)" />
+                        </div>
+                        <div class="form-group">
+                            <label for="email">Email Address</label>
+                            <InputText id="email" @bind-Value="profileForm.Email" class="form-control" placeholder="Enter your email" />
+                            <ValidationMessage For="@(() => profileForm.Email)" />
+                        </div>
+                    </div>
+
+                    <div class="form-actions">
+                        <button type="submit" class="btn btn-primary" disabled="@isUpdatingProfile">
+                            @if (isUpdatingProfile)
+                            {
+                                <span>Updating...</span>
+                            }
+                            else
+                            {
+                                <span>Update Profile</span>
+                            }
+                        </button>
+                    </div>
+                </EditForm>
+            </div>
+
+            <!-- Password Change Section -->
+            <div class="settings-section">
+                <div class="section-header">
+                    <h2>Change Password</h2>
+                    <p>Update your account password for better security</p>
+                </div>
+
+                <EditForm Model="@passwordForm" OnValidSubmit="ChangePassword">
+                    <DataAnnotationsValidator />
+
+                    @if (!string.IsNullOrEmpty(passwordMessage))
+                    {
+                        <div class="alert @(passwordSuccess ? "alert-success" : "alert-danger")">
+                            @passwordMessage
+                        </div>
+                    }
+
+                    <div class="form-group">
+                        <label for="currentPassword">Current Password</label>
+                        <InputText id="currentPassword" type="password" @bind-Value="passwordForm.CurrentPassword" class="form-control" placeholder="Enter your current password" />
+                        <ValidationMessage For="@(() => passwordForm.CurrentPassword)" />
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="newPassword">New Password</label>
+                            <InputText id="newPassword" type="password" @bind-Value="passwordForm.NewPassword" class="form-control" placeholder="Enter new password" />
+                            <ValidationMessage For="@(() => passwordForm.NewPassword)" />
+                        </div>
+                        <div class="form-group">
+                            <label for="confirmPassword">Confirm New Password</label>
+                            <InputText id="confirmPassword" type="password" @bind-Value="passwordForm.ConfirmNewPassword" class="form-control" placeholder="Confirm new password" />
+                            <ValidationMessage For="@(() => passwordForm.ConfirmNewPassword)" />
+                        </div>
+                    </div>
+
+                    <div class="form-actions">
+                        <button type="submit" class="btn btn-primary" disabled="@isChangingPassword">
+                            @if (isChangingPassword)
+                            {
+                                <span>Changing Password...</span>
+                            }
+                            else
+                            {
+                                <span>Change Password</span>
+                            }
+                        </button>
+                    </div>
+                </EditForm>
+            </div>
+
+            <!-- Admin/Teacher User Management Section -->
+            @if (isAdmin || isTeacher)
+            {
+                <div class="settings-section admin-section">
+                    <div class="section-header">
+                        <h2>User Management</h2>
+                        <p>
+                            @if (isAdmin)
+                            {
+                                <span>Create new admin and teacher accounts</span>
+                            }
+                            else
+                            {
+                                <span>Create new teacher accounts</span>
+                            }
+                        </p>
+                    </div>
+
+                    <div class="user-creation-tabs">
+                        @if (isAdmin)
+                        {
+                            <button class="tab-button @(activeTab == "admin" ? "active" : "")" @onclick="@(() => SetActiveTab("admin"))">
+                                Create Admin
+                            </button>
+                        }
+                        <button class="tab-button @(activeTab == "teacher" ? "active" : "")" @onclick="@(() => SetActiveTab("teacher"))">
+                            Create Teacher
+                        </button>
+                    </div>
+
+                    <div class="tab-content">
+                        @if (activeTab == "admin" && isAdmin)
+                        {
+                            <EditForm Model="@adminForm" OnValidSubmit="CreateAdmin">
+                                <DataAnnotationsValidator />
+
+                                @if (!string.IsNullOrEmpty(adminMessage))
+                                {
+                                    <div class="alert @(adminSuccess ? "alert-success" : "alert-danger")">
+                                        @adminMessage
+                                    </div>
+                                }
+
+                                <div class="form-row">
+                                    <div class="form-group">
+                                        <label for="adminUsername">Admin Full Name</label>
+                                        <InputText id="adminUsername" @bind-Value="adminForm.Username" class="form-control" placeholder="Enter admin's full name" />
+                                        <ValidationMessage For="@(() => adminForm.Username)" />
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="adminEmail">Admin Email</label>
+                                        <InputText id="adminEmail" @bind-Value="adminForm.Email" class="form-control" placeholder="Enter admin's email" />
+                                        <ValidationMessage For="@(() => adminForm.Email)" />
+                                    </div>
+                                </div>
+
+                                <div class="form-row">
+                                    <div class="form-group">
+                                        <label for="adminPassword">Temporary Password</label>
+                                        <InputText id="adminPassword" type="password" @bind-Value="adminForm.Password" class="form-control" placeholder="Set temporary password" />
+                                        <ValidationMessage For="@(() => adminForm.Password)" />
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="adminConfirmPassword">Confirm Password</label>
+                                        <InputText id="adminConfirmPassword" type="password" @bind-Value="adminForm.ConfirmPassword" class="form-control" placeholder="Confirm password" />
+                                        <ValidationMessage For="@(() => adminForm.ConfirmPassword)" />
+                                    </div>
+                                </div>
+
+                                <div class="form-actions">
+                                    <button type="submit" class="btn btn-primary" disabled="@isCreatingAdmin">
+                                        @if (isCreatingAdmin)
+                                        {
+                                            <span>Creating Admin...</span>
+                                        }
+                                        else
+                                        {
+                                            <span>Create Admin Account</span>
+                                        }
+                                    </button>
+                                </div>
+                            </EditForm>
+                        }
+
+                        @if (activeTab == "teacher")
+                        {
+                            <EditForm Model="@teacherForm" OnValidSubmit="CreateTeacher">
+                                <DataAnnotationsValidator />
+
+                                @if (!string.IsNullOrEmpty(teacherMessage))
+                                {
+                                    <div class="alert @(teacherSuccess ? "alert-success" : "alert-danger")">
+                                        @teacherMessage
+                                    </div>
+                                }
+
+                                <div class="form-row">
+                                    <div class="form-group">
+                                        <label for="teacherUsername">Teacher Full Name</label>
+                                        <InputText id="teacherUsername" @bind-Value="teacherForm.Username" class="form-control" placeholder="Enter teacher's full name" />
+                                        <ValidationMessage For="@(() => teacherForm.Username)" />
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="teacherEmail">Teacher Email</label>
+                                        <InputText id="teacherEmail" @bind-Value="teacherForm.Email" class="form-control" placeholder="Enter teacher's email" />
+                                        <ValidationMessage For="@(() => teacherForm.Email)" />
+                                    </div>
+                                </div>
+
+                                <div class="form-row">
+                                    <div class="form-group">
+                                        <label for="teacherPassword">Temporary Password</label>
+                                        <InputText id="teacherPassword" type="password" @bind-Value="teacherForm.Password" class="form-control" placeholder="Set temporary password" />
+                                        <ValidationMessage For="@(() => teacherForm.Password)" />
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="teacherConfirmPassword">Confirm Password</label>
+                                        <InputText id="teacherConfirmPassword" type="password" @bind-Value="teacherForm.ConfirmPassword" class="form-control" placeholder="Confirm password" />
+                                        <ValidationMessage For="@(() => teacherForm.ConfirmPassword)" />
+                                    </div>
+                                </div>
+
+                                <div class="form-actions">
+                                    <button type="submit" class="btn btn-primary" disabled="@isCreatingTeacher">
+                                        @if (isCreatingTeacher)
+                                        {
+                                            <span>Creating Teacher...</span>
+                                        }
+                                        else
+                                        {
+                                            <span>Create Teacher Account</span>
+                                        }
+                                    </button>
+                                </div>
+                            </EditForm>
+                        }
+                    </div>
+
+                    <div class="admin-notice">
+                        <div class="notice-icon">
+                            <span class="oi oi-info"></span>
+                        </div>
+                        <div class="notice-content">
+                            <h4>User Creation Guidelines</h4>
+                            <p>New users will receive their login credentials and should change their password upon first login. All created accounts will have appropriate permissions based on their assigned role. The temporary password should be communicated securely to the new user.</p>
+                        </div>
+                    </div>
+                </div>
+            }
+
+            <!-- Account Information Section -->
+            <div class="settings-section info-section">
+                <div class="section-header">
+                    <h2>Account Information</h2>
+                    <p>Your current account details and authentication methods</p>
+                </div>
+
+                <div class="info-grid">
+                    <div class="info-item">
+                        <span class="info-label">Account ID:</span>
+                        <span class="info-value">@user.Id</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">Role:</span>
+                        <span class="info-value role-badge @user.Role.ToLower()">@user.Role</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">Authentication Methods:</span>
+                        <div class="info-value">
+                            @foreach (var auth in user.AuthMethods)
+                            {
+                                <span class="auth-badge @auth.Provider.ToString().ToLower()">
+                                    @auth.Provider
+                                </span>
+                            }
+                        </div>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">Groups:</span>
+                        <span class="info-value">@(user.Groups?.Count ?? 0) group(s)</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Danger Zone - Account Deletion -->
+            <div class="settings-section danger-section">
+                <div class="section-header danger-header">
+                    <h2>Danger Zone</h2>
+                    <p>Irreversible and destructive actions</p>
+                </div>
+
+                <div class="danger-content">
+                    <div class="danger-warning">
+                        <div class="warning-icon">
+                            <span class="oi oi-warning"></span>
+                        </div>
+                        <div class="warning-text">
+                            <h4>Delete Account</h4>
+                            <p>Once you delete your account, there is no going back. This action cannot be undone.</p>
+                            <ul class="warning-list">
+                                <li>All your personal data will be permanently deleted</li>
+                                <li>You will be removed from all groups</li>
+                                <li>Your events and schedules will be lost</li>
+                                <li>This action cannot be reversed</li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <div class="danger-actions">
+                        <button class="btn btn-danger" @onclick="ShowDeleteConfirmation">
+                            <span class="oi oi-trash"></span>
+                            Delete My Account
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+</div>
+
+<!-- Delete Account Confirmation Modal -->
+@if (showDeleteModal)
+{
+    <div class="modal-overlay" @onclick="CloseDeleteModal">
+        <div class="modal-content delete-modal" @onclick:stopPropagation="true">
+            <div class="modal-header danger-modal-header">
+                <h3>
+                    <span class="oi oi-warning"></span>
+                    Delete Account
+                </h3>
+                <button class="close-btn" @onclick="CloseDeleteModal">&times;</button>
+            </div>
+
+            <div class="modal-body">
+                @if (deleteStep == 1)
+                {
+                    <div class="delete-confirmation-step">
+                        <div class="final-warning">
+                            <h4>Are you absolutely sure?</h4>
+                            <p>This action <strong>cannot be undone</strong>. This will permanently delete your account and remove all associated data.</p>
+
+                            <div class="consequences-list">
+                                <h5>This will:</h5>
+                                <ul>
+                                    <li>Delete your profile and personal information</li>
+                                    <li>Remove you from all groups and events</li>
+                                    <li>Delete all your created content</li>
+                                    <li>Revoke all authentication methods</li>
+                                </ul>
+                            </div>
+
+                            <div class="type-to-confirm">
+                                <p>Please type <strong>DELETE</strong> to confirm:</p>
+                                <input type="text" @bind="deleteConfirmationText" @oninput="OnDeleteConfirmationInput"
+                                       class="form-control delete-input" placeholder="Type DELETE here" autocomplete="off" />
+                            </div>
+                        </div>
+
+                        <div class="modal-actions danger-actions">
+                            <button class="btn btn-secondary" @onclick="CloseDeleteModal">
+                                Cancel
+                            </button>
+                            <button class="btn btn-danger" @onclick="ProceedToPasswordStep" disabled="@(!IsDeleteConfirmationValid)">
+                                I understand, continue
+                            </button>
+                        </div>
+                    </div>
+                }
+                else if (deleteStep == 2)
+                {
+                    <div class="delete-password-step">
+                        <div class="password-confirmation">
+                            <h4>Enter your password to confirm</h4>
+                            <p>As a final step, please enter your current password to confirm account deletion.</p>
+
+                            @if (!string.IsNullOrEmpty(deleteErrorMessage))
+                            {
+                                <div class="alert alert-danger">
+                                    @deleteErrorMessage
+                                </div>
+                            }
+
+                            <div class="form-group">
+                                <label for="deletePassword">Current Password</label>
+                                <input type="password" id="deletePassword" @bind="deletePasswordConfirmation"
+                                       class="form-control" placeholder="Enter your password" autocomplete="current-password" />
+                            </div>
+
+                            <div class="checkbox-confirmation">
+                                <label class="checkbox-label">
+                                    <input type="checkbox" @bind="confirmDeletion" />
+                                    <span class="checkmark"></span>
+                                    I confirm that I want to permanently delete my account
+                                </label>
+                            </div>
+                        </div>
+
+                        <div class="modal-actions danger-actions">
+                            <button class="btn btn-secondary" @onclick="GoBackToConfirmation">
+                                Back
+                            </button>
+                            <button class="btn btn-danger" @onclick="DeleteAccount" disabled="@(!CanDeleteAccount || isDeletingAccount)">
+                                @if (isDeletingAccount)
+                                {
+                                    <span>Deleting Account...</span>
+                                }
+                                else
+                                {
+                                    <span>
+                                        <span class="oi oi-trash"></span>
+                                        Delete My Account Forever
+                                    </span>
+                                }
+                            </button>
+                        </div>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    private UserResponseDto? user;
+    private bool isLoading = true;
+    private bool isAdmin = false;
+    private bool isTeacher = false;
+
+    // Profile update
+    private UpdateUserDto profileForm = new();
+    private bool isUpdatingProfile = false;
+    private string profileMessage = "";
+    private bool profileSuccess = false;
+
+    // Password change
+    private ChangePasswordRequest passwordForm = new() { CurrentPassword = "", NewPassword = "", ConfirmNewPassword = "" };
+    private bool isChangingPassword = false;
+    private string passwordMessage = "";
+    private bool passwordSuccess = false;
+
+    // User creation
+    private string activeTab = "teacher";
+    private RegisterRequest adminForm = new() { Username = "", Email = "", Password = "", ConfirmPassword = "" };
+    private RegisterRequest teacherForm = new() { Username = "", Email = "", Password = "", ConfirmPassword = "" };
+    private bool isCreatingAdmin = false;
+    private bool isCreatingTeacher = false;
+    private string adminMessage = "";
+    private string teacherMessage = "";
+    private bool adminSuccess = false;
+    private bool teacherSuccess = false;
+
+    // Account deletion
+    private bool showDeleteModal = false;
+    private int deleteStep = 1; // 1 = confirmation, 2 = password
+    private string deleteConfirmationText = "";
+    private string deletePasswordConfirmation = "";
+    private bool confirmDeletion = false;
+    private bool isDeletingAccount = false;
+    private string deleteErrorMessage = "";
+
+    private bool IsDeleteConfirmationValid => deleteConfirmationText.Trim().Equals("DELETE", StringComparison.Ordinal);
+    private bool CanDeleteAccount => !string.IsNullOrWhiteSpace(deletePasswordConfirmation) && confirmDeletion;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadUserData();
+    }
+
+    private async Task LoadUserData()
+    {
+        isLoading = true;
+
+        try
+        {
+            user = await UserService.GetCurrentUserAsync();
+            if (user != null)
+            {
+                isAdmin = user.Role.Equals("Admin", StringComparison.OrdinalIgnoreCase);
+                isTeacher = user.Role.Equals("Teacher", StringComparison.OrdinalIgnoreCase);
+
+                // Initialize profile form with current data
+                profileForm = new UpdateUserDto
+                    {
+                        Username = user.Username,
+                        Email = user.Email
+                    };
+
+                // Set default tab for admin/teacher
+                if (isAdmin)
+                {
+                    activeTab = "admin";
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error loading user data: {ex.Message}");
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    private async Task UpdateProfile()
+    {
+        isUpdatingProfile = true;
+        profileMessage = "";
+
+        try
+        {
+            var success = await UserService.UpdateProfileAsync(profileForm);
+            if (success)
+            {
+                profileMessage = "Profile updated successfully!";
+                profileSuccess = true;
+
+                // Reload user data to reflect changes
+                await LoadUserData();
+            }
+            else
+            {
+                profileMessage = "Failed to update profile. Please try again.";
+                profileSuccess = false;
+            }
+        }
+        catch (Exception ex)
+        {
+            profileMessage = $"An error occurred: {ex.Message}";
+            profileSuccess = false;
+        }
+        finally
+        {
+            isUpdatingProfile = false;
+        }
+    }
+
+    private async Task ChangePassword()
+    {
+        isChangingPassword = true;
+        passwordMessage = "";
+
+        try
+        {
+            var success = await UserService.ChangePasswordAsync(passwordForm);
+            if (success)
+            {
+                passwordMessage = "Password changed successfully!";
+                passwordSuccess = true;
+
+                // Clear the form
+                passwordForm = new ChangePasswordRequest { CurrentPassword = "", NewPassword = "", ConfirmNewPassword = "" };
+            }
+            else
+            {
+                passwordMessage = "Failed to change password. Please check your current password and try again.";
+                passwordSuccess = false;
+            }
+        }
+        catch (Exception ex)
+        {
+            passwordMessage = $"An error occurred: {ex.Message}";
+            passwordSuccess = false;
+        }
+        finally
+        {
+            isChangingPassword = false;
+        }
+    }
+
+    private void SetActiveTab(string tab)
+    {
+        activeTab = tab;
+        // Clear any existing messages when switching tabs
+        adminMessage = "";
+        teacherMessage = "";
+    }
+
+    private async Task CreateAdmin()
+    {
+        isCreatingAdmin = true;
+        adminMessage = "";
+
+        try
+        {
+            var success = await UserService.CreateAdminAsync(adminForm);
+            if (success)
+            {
+                adminMessage = "Admin account created successfully!";
+                adminSuccess = true;
+                adminForm = new RegisterRequest { Username = "", Email = "", Password = "", ConfirmPassword = "" };
+            }
+            else
+            {
+                adminMessage = "Failed to create admin account. Please check if the email already exists.";
+                adminSuccess = false;
+            }
+        }
+        catch (Exception ex)
+        {
+            adminMessage = $"An error occurred: {ex.Message}";
+            adminSuccess = false;
+        }
+        finally
+        {
+            isCreatingAdmin = false;
+        }
+    }
+
+    private async Task CreateTeacher()
+    {
+        isCreatingTeacher = true;
+        teacherMessage = "";
+
+        try
+        {
+            var success = await UserService.CreateTeacherAsync(teacherForm);
+            if (success)
+            {
+                teacherMessage = "Teacher account created successfully!";
+                teacherSuccess = true;
+                teacherForm = new RegisterRequest { Username = "", Email = "", Password = "", ConfirmPassword = "" };
+            }
+            else
+            {
+                teacherMessage = "Failed to create teacher account. Please check if the email already exists.";
+                teacherSuccess = false;
+            }
+        }
+        catch (Exception ex)
+        {
+            teacherMessage = $"An error occurred: {ex.Message}";
+            teacherSuccess = false;
+        }
+        finally
+        {
+            isCreatingTeacher = false;
+        }
+    }
+
+    private void ShowDeleteConfirmation()
+    {
+        deleteStep = 1;
+        deleteConfirmationText = "";
+        deletePasswordConfirmation = "";
+        confirmDeletion = false;
+        deleteErrorMessage = "";
+        showDeleteModal = true;
+    }
+
+    private void CloseDeleteModal()
+    {
+        showDeleteModal = false;
+        deleteStep = 1;
+        deleteConfirmationText = "";
+        deletePasswordConfirmation = "";
+        confirmDeletion = false;
+        deleteErrorMessage = "";
+    }
+
+    private void OnDeleteConfirmationInput(ChangeEventArgs e)
+    {
+        deleteConfirmationText = e.Value?.ToString() ?? "";
+    }
+
+    private void ProceedToPasswordStep()
+    {
+        if (IsDeleteConfirmationValid)
+        {
+            deleteStep = 2;
+            deleteErrorMessage = "";
+        }
+    }
+
+    private void GoBackToConfirmation()
+    {
+        deleteStep = 1;
+        deleteErrorMessage = "";
+    }
+
+    private async Task DeleteAccount()
+    {
+        isDeletingAccount = true;
+        deleteErrorMessage = "";
+
+        try
+        {
+            var deleteRequest = new DeleteAccountRequest
+                {
+                    Password = deletePasswordConfirmation,
+                    ConfirmDelete = confirmDeletion
+                };
+
+            var success = await UserService.DeleteAccountAsync(deleteRequest);
+            if (success)
+            {
+                // Account deleted successfully - logout and redirect
+                await AuthService.LogoutAsync();
+                NavigationManager.NavigateTo("/", true);
+            }
+            else
+            {
+                deleteErrorMessage = "Failed to delete account. Please check your password and try again.";
+            }
+        }
+        catch (Exception ex)
+        {
+            deleteErrorMessage = $"An error occurred: {ex.Message}";
+        }
+        finally
+        {
+            isDeletingAccount = false;
+        }
+    }
+}

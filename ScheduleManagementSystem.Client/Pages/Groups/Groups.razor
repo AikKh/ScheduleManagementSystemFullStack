@@ -13,7 +13,7 @@
             <p class="subtitle">Manage your group memberships and collaborations</p>
         </div>
 
-        @if (isTeacher)
+        @if (isTeacher || isAdmin)
         {
             <button class="btn btn-primary" @onclick="ShowCreateGroupModal">
                 <span class="oi oi-plus"></span> Create Group
@@ -291,6 +291,7 @@
     private List<GroupSummaryDto> filteredGroups = new();
     private bool isLoading = true;
     private bool isTeacher = false;
+    private bool isAdmin = false;
     private string searchQuery = "";
 
     // Create group modal
@@ -320,6 +321,7 @@
             if (user != null)
             {
                 isTeacher = user.Role.Equals("Teacher", StringComparison.OrdinalIgnoreCase);
+                isAdmin = user.Role.Equals("Admin", StringComparison.OrdinalIgnoreCase);
                 userGroups = user.Groups ?? new List<GroupSummaryDto>();
             }
 

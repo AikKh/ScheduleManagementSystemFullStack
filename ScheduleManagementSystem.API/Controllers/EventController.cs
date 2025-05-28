@@ -13,7 +13,7 @@ public class EventController(EventService eventService) : ControllerBase
 {
     private readonly EventService _eventService = eventService;
 
-    [Authorize(Roles = "Student,Teacher")]
+    [Authorize]
     [HttpGet]
     public async Task<ActionResult<List<EventResponseDto>>> GetEvents()
     {
@@ -38,7 +38,7 @@ public class EventController(EventService eventService) : ControllerBase
         }
     }
 
-    [Authorize(Roles = "Teacher")]
+    [Authorize(Roles = "Teacher,Admin")]
     [HttpPost]
     public async Task<ActionResult<EventResponseDto>> CreateEvent([FromBody] EventCreateDto eventDto)
     {
@@ -71,7 +71,7 @@ public class EventController(EventService eventService) : ControllerBase
         }
     }
 
-    [Authorize(Roles = "Student,Teacher")]
+    [Authorize]
     [HttpGet("{id:int}")]
     public async Task<ActionResult<EventResponseDto>> GetEventById(int id)
     {
@@ -99,7 +99,7 @@ public class EventController(EventService eventService) : ControllerBase
         }
     }
 
-    [Authorize(Roles = "Teacher")]
+    [Authorize(Roles = "Teacher,Admin")]
     [HttpPut("{id:int}")]
     public async Task<ActionResult<EventResponseDto>> UpdateEvent(int id, [FromBody] EventUpdateDto eventDto)
     {
@@ -129,7 +129,7 @@ public class EventController(EventService eventService) : ControllerBase
         }
     }
 
-    [Authorize(Roles = "Teacher")]
+    [Authorize(Roles = "Teacher,Admin")]
     [HttpDelete("{id:int}")]
     public async Task<ActionResult> DeleteEvent(int id)
     {

@@ -6,6 +6,7 @@ using Microsoft.IdentityModel.Tokens;
 using System.Text;
 using Microsoft.AspNetCore.Authentication.OAuth;
 using System.Security.Claims;
+using ScheduleManagementSystem.API.Controllers;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -32,6 +33,7 @@ builder.Services.AddScoped<AuthService>();
 builder.Services.AddScoped<JwtService>();
 builder.Services.AddScoped<EventService>();
 builder.Services.AddScoped<GroupService>();
+builder.Services.AddScoped<CreateController>();
 
 // Local auth
 builder.Services.AddAuthentication(options =>

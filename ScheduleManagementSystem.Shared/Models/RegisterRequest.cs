@@ -17,6 +17,7 @@ public class RegisterRequest
     public required string Email { get; set; }
 
     [Required]
+    [MinLength(6, ErrorMessage = "Password must be at least 6 characters long.")]
     public required string Password { get; set; }
 
     [Required]

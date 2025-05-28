@@ -29,7 +29,7 @@
                 </button>
             </div>
 
-            @if (isTeacher)
+            @if (isTeacher || isAdmin)
             {
                 <button style="background-color: #0A3161; color: white; padding: 12px 24px; border-radius: 6px; font-weight: 500; cursor: pointer; border: none; font-size: 16px;" @onclick="ShowAddEventModal">
                     + Add Event
@@ -139,7 +139,7 @@
                     }
                 </div>
 
-                @if (isTeacher && canEditEvent)
+                @if ((isTeacher || isAdmin) && canEditEvent)
                 {
                     <div style="display: flex; gap: 12px; justify-content: flex-end; margin-top: 24px; padding-top: 20px; border-top: 1px solid #e0e0e0;">
                         <button style="background-color: #0A3161; color: white; padding: 12px 24px; border-radius: 6px; font-weight: 500; cursor: pointer; border: none;" @onclick="EditEvent">Edit Event</button>
@@ -152,7 +152,7 @@
 }
 
 @* Add/Edit Event Modal *@
-@if (showAddEventModal && isTeacher)
+@if (showAddEventModal && (isTeacher || isAdmin))
 {
     <div style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0, 0, 0, 0.5); display: flex; justify-content: center; align-items: center; z-index: 1000; padding: 20px;" @onclick="CloseAddEventModal">
         <div style="background-color: white; border-radius: 8px; box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3); width: 100%; max-width: 600px; max-height: 90vh; overflow-y: auto;" @onclick:stopPropagation="true">
@@ -250,6 +250,7 @@
     private DateTime currentDate = DateTime.Now;
     private bool isLoading = true;
     private bool isTeacher = false;
+    private bool isAdmin = false;
     private bool canEditEvent = false;
 
     // Event details modal
@@ -282,6 +283,8 @@
             if (user != null)
             {
                 isTeacher = user.Role.Equals("Teacher", StringComparison.OrdinalIgnoreCase);
+                isAdmin = user.Role.Equals("Admin", StringComparison.OrdinalIgnoreCase);
+
                 userGroups = user.Groups ?? new List<GroupSummaryDto>();
             }
 
@@ -398,7 +401,7 @@
     private void ShowEventDetails(EventResponseDto eventItem)
     {
         selectedEvent = eventItem;
-        canEditEvent = isTeacher;
+        canEditEvent = isTeacher || isAdmin;
         showEventModal = true;
     }
 
