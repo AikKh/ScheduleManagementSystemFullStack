@@ -46,5 +46,6 @@ builder.Services.AddScoped<AuthService>();
 builder.Services.AddScoped<UserService>();
 builder.Services.AddScoped<EventService>();
 builder.Services.AddScoped<GroupService>();
+builder.Services.AddScoped<GoogleAuthService>();
 
 await builder.Build().RunAsync();

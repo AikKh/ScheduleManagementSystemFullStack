@@ -7,6 +7,7 @@ using System.Text;
 using Microsoft.AspNetCore.Authentication.OAuth;
 using System.Security.Claims;
 using ScheduleManagementSystem.API.Controllers;
+using Microsoft.Extensions.Options;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -33,7 +34,6 @@ builder.Services.AddScoped<AuthService>();
 builder.Services.AddScoped<JwtService>();
 builder.Services.AddScoped<EventService>();
 builder.Services.AddScoped<GroupService>();
-builder.Services.AddScoped<CreateController>();
 
 // Local auth
 builder.Services.AddAuthentication(options =>
@@ -74,24 +74,8 @@ builder.Services.AddAuthentication(options =>
 {
     googleOptions.ClientId = builder.Configuration["Authentication:Google:ClientId"] ?? "";
     googleOptions.ClientSecret = builder.Configuration["Authentication:Google:ClientSecret"] ?? "";
+    googleOptions.CallbackPath = "/api/google_auth/callback";
     googleOptions.SaveTokens = true;
-
-    foreach (var scope in builder.Configuration.GetSection("Authentication:Google:Scopes").Get<string[]>())
-    {
-        googleOptions.Scope.Add(scope);
-    }
-
-    // Set the prompt to force account selection
-    googleOptions.AuthorizationEndpoint += $"?prompt={builder.Configuration["Authentication:Google:Prompt"]}";
-
-    googleOptions.Events = new OAuthEvents
-    {
-        OnRedirectToAuthorizationEndpoint = context =>
-        {
-            context.Response.Redirect(context.RedirectUri);
-            return Task.CompletedTask;
-        }
-    };
 });
 
 builder.Services.AddAuthorization();

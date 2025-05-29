@@ -28,7 +28,7 @@ public class AuthController(AuthService authService, UserService userService, Jw
                 HttpOnly = true,
                 Secure = true,
                 SameSite = SameSiteMode.Lax,
-                MaxAge = TimeSpan.FromMinutes(30)
+                MaxAge = TimeSpan.FromDays(7)
             });
 
             return Ok(new { token });
@@ -73,7 +73,7 @@ public class AuthController(AuthService authService, UserService userService, Jw
                 HttpOnly = true,
                 Secure = true,
                 SameSite = SameSiteMode.Lax,
-                MaxAge = TimeSpan.FromMinutes(30)
+                MaxAge = TimeSpan.FromDays(7)
             });
 
             return Ok(new { token });

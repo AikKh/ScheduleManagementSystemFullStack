@@ -121,14 +121,7 @@
 
     private void HandleGoogleLogin()
     {
-        // Build the return URL
-        var redirectUrl = "/profile";
-        if (!string.IsNullOrEmpty(returnUrl))
-        {
-            redirectUrl = returnUrl;
-        }
-
         // Redirect to the Google login endpoint
-        NavigationManager.NavigateTo($"/api/google_auth/login?returnUrl={Uri.EscapeDataString(redirectUrl)}", true);
+        NavigationManager.NavigateTo($"/api/google_auth/login?returnUrl=/api/user/profile", true);
     }
 }

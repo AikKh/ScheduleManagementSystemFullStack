@@ -115,6 +115,6 @@
     private void HandleGoogleLogin()
     {
         // Redirect to the Google login endpoint
-        NavigationManager.NavigateTo("/api/google_auth/login?returnUrl=/profile", true);
+        NavigationManager.NavigateTo("/api/google_auth/login?returnUrl=/api/user/profile", true);
     }
 }
