@@ -20,14 +20,14 @@ public class GoogleAuthController(IConfiguration configuration, AuthService auth
     {
         var properties = new AuthenticationProperties
         {
-            RedirectUri = Url.Action(nameof(Callback)),
+            RedirectUri = Url.Action(nameof(Callback), new { returnUrl }),
             Items =
             {
                 { "returnUrl", returnUrl }
             }
         };
 
-        return Challenge(properties, "Google");
+        return Challenge(properties, GoogleDefaults.AuthenticationScheme);
     }
 
     [HttpGet("callback")]

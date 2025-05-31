@@ -6,17 +6,20 @@ using ScheduleManagementSystem.Shared.Models;
 using ScheduleManagementSystem.Shared.DTOs;
 using Microsoft.AspNetCore.Components.Authorization;
 using ScheduleManagementSystem.Client.Providers;
+using Microsoft.AspNetCore.Components;
 
 namespace ScheduleManagementSystem.Client.Services;
 
 public class AuthService(
     HttpClient httpClient,
     ILocalStorageService localStorageService,
-    AuthenticationStateProvider authStateProvider)
+    AuthenticationStateProvider authStateProvider,
+    NavigationManager navigationManager)
 {
     private readonly HttpClient _httpClient = httpClient;
     private readonly ILocalStorageService _localStorageService = localStorageService;
     private readonly AuthenticationStateProvider _authStateProvider = authStateProvider;
+    private readonly NavigationManager _navigationManager = navigationManager;
 
     public async Task<bool> LoginAsync(LoginRequest loginRequest)
     {
@@ -80,15 +83,42 @@ public class AuthService(
     public async Task LogoutAsync()
     {
         await _httpClient.GetAsync("api/auth/logout");
-        //await _jsRuntime.InvokeVoidAsync("localStorage.removeItem", "authToken");
         await _localStorageService.RemoveItem("authToken");
         ((CustomAuthStateProvider)_authStateProvider).NotifyUserLogout();
     }
 
     public async Task<bool> IsAuthenticatedAsync()
     {
-        //var token = await _jsRuntime.InvokeAsync<string>("localStorage.getItem", "authToken");
         var token = await _localStorageService.GetItem<string>("authToken");
         return !string.IsNullOrEmpty(token);
     }
+
+    public void LoginWithGoogle(string returnUrl = "/profile")
+    {
+        try
+        {
+            // Get the current Blazor app URL to return to after authentication
+            var currentUri = _navigationManager.ToAbsoluteUri(_navigationManager.Uri);
+            var blazorBaseUrl = $"{currentUri.Scheme}://{currentUri.Authority}";
+
+            // The return URL should be back to the Blazor app, not the API
+            var fullReturnUrl = $"{blazorBaseUrl}{returnUrl}";
+            var encodedReturnUrl = Uri.EscapeDataString(fullReturnUrl);
+
+            // CRUCIAL: Navigate to the API server, not the client server
+            var googleLoginUrl = $"{_httpClient.BaseAddress}api/google_auth/login?returnUrl={encodedReturnUrl}";
+
+            Console.WriteLine($"Navigating to Google auth: {googleLoginUrl}");
+            Console.WriteLine($"Return URL will be: {fullReturnUrl}");
+
+            // Navigate to the API server for Google authentication
+            _navigationManager.NavigateTo(googleLoginUrl, forceLoad: true);
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error initiating Google login: {ex.Message}");
+            throw new Exception($"Failed to start Google authentication: {ex.Message}");
+        }
+    }
+
 }

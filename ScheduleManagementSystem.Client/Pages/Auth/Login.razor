@@ -62,11 +62,17 @@
     private string errorMessage = "";
     private string returnUrl = "";
 
-    protected override void OnInitialized()
+    protected override async Task OnInitializedAsync()
     {
-        var uri = NavigationManager.ToAbsoluteUri(NavigationManager.Uri);
+        // Check if user is already authenticated
+        if (await AuthService.IsAuthenticatedAsync())
+        {
+            NavigationManager.NavigateTo(returnUrl ?? "/profile", replace: true);
+            return;
+        }
 
-        // Extract returnUrl from query string manually
+        // Extract returnUrl from query string
+        var uri = NavigationManager.ToAbsoluteUri(NavigationManager.Uri);
         if (uri.Query.Contains("returnUrl="))
         {
             var queryString = uri.Query.StartsWith("?") ? uri.Query.Substring(1) : uri.Query;
@@ -78,6 +84,23 @@
                 if (parts.Length == 2 && parts[0] == "returnUrl")
                 {
                     returnUrl = Uri.UnescapeDataString(parts[1]);
+                    break;
+                }
+            }
+        }
+
+        // Check for error parameter (from failed Google auth)
+        if (uri.Query.Contains("error="))
+        {
+            var queryString = uri.Query.StartsWith("?") ? uri.Query.Substring(1) : uri.Query;
+            var parameters = queryString.Split('&');
+
+            foreach (var parameter in parameters)
+            {
+                var parts = parameter.Split('=');
+                if (parts.Length == 2 && parts[0] == "error")
+                {
+                    errorMessage = Uri.UnescapeDataString(parts[1]);
                     break;
                 }
             }
@@ -95,14 +118,9 @@
 
             if (result)
             {
-                if (!string.IsNullOrEmpty(returnUrl))
-                {
-                    NavigationManager.NavigateTo(returnUrl);
-                }
-                else
-                {
-                    NavigationManager.NavigateTo("/profile");
-                }
+                // Navigate to returnUrl or default profile page
+                var destination = !string.IsNullOrEmpty(returnUrl) ? returnUrl : "/profile";
+                NavigationManager.NavigateTo(destination, replace: true);
             }
             else
             {
@@ -121,7 +139,21 @@
 
     private void HandleGoogleLogin()
     {
-        // Redirect to the Google login endpoint
-        NavigationManager.NavigateTo($"/api/google_auth/login?returnUrl=/api/user/profile", true);
+        if (isLoading) return;
+
+        isLoading = true;
+
+        try
+        {
+            // Use the AuthService method for Google login
+            // This will navigate to the API endpoint with proper return URL handling
+            var destination = !string.IsNullOrEmpty(returnUrl) ? returnUrl : "/profile";
+            AuthService.LoginWithGoogle(destination);
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Failed to initiate Google login: {ex.Message}";
+            isLoading = false;
+        }
     }
 }
