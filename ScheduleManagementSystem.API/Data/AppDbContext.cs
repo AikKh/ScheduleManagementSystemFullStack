@@ -1,4 +1,5 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.AspNetCore.DataProtection.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using ScheduleManagementSystem.API.Models;
 
 namespace ScheduleManagementSystem.API.Data
@@ -9,7 +10,7 @@ namespace ScheduleManagementSystem.API.Data
         public DbSet<Group> Groups { get; set; }
         public DbSet<AuthMethod> AuthMethods { get; set; }
         public DbSet<Event> Events { get; set; }
-
+        
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             // Configure enum to use string values
@@ -58,13 +59,6 @@ namespace ScheduleManagementSystem.API.Data
                 .HasIndex(a => new { a.UserId, a.Provider })
                 .IsUnique()
                 .HasDatabaseName("IX_UserProvider");
-
-            //modelBuilder.Entity<Event>()
-            //    .Property(e => e.Date)
-            //    .HasConversion(
-            //        v => v.Kind == DateTimeKind.Utc ? v : DateTime.SpecifyKind(v, DateTimeKind.Utc),
-            //        v => DateTime.SpecifyKind(v, DateTimeKind.Utc)
-            //    );
         }
     }
 }

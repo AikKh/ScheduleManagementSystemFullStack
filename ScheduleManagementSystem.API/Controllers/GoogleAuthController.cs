@@ -36,7 +36,6 @@ public class GoogleAuthController(IConfiguration configuration, AuthService auth
     {
         try
         {
-            // CRUCIAL: Authenticate using Google scheme
             var result = await HttpContext.AuthenticateAsync(GoogleDefaults.AuthenticationScheme);
 
             if (!result.Succeeded)
