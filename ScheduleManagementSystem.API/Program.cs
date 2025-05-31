@@ -37,44 +37,8 @@ builder.Services.AddScoped<JwtService>();
 builder.Services.AddScoped<EventService>();
 builder.Services.AddScoped<GroupService>();
 
-
-#region Configur Data Protection
-var dataProtectionKey = builder.Configuration["DataProtection:Key"];
-
-if (string.IsNullOrEmpty(dataProtectionKey))
-{
-    Console.WriteLine("CRITICAL ERROR: DataProtection__Key environment variable not found!");
-    Console.WriteLine("OAuth correlation will fail. Please set DataProtection__Key in Render.com");
-    throw new InvalidOperationException("DataProtection__Key environment variable is required for production");
-}
-
-try
-{
-    var keyBytes = Convert.FromBase64String(dataProtectionKey);
-    if (keyBytes.Length < 16)
-    {
-        throw new InvalidOperationException("DataProtection key must be at least 128 bits (16 bytes)");
-    }
-
-    Console.WriteLine($"Data protection key loaded successfully ({keyBytes.Length * 8} bits)");
-
-    builder.Services.AddDataProtection()
-        .SetApplicationName("ScheduleManagementSystem")
-        .SetDefaultKeyLifetime(TimeSpan.FromDays(90))
-        .UseCryptographicAlgorithms(new AuthenticatedEncryptorConfiguration
-        {
-            EncryptionAlgorithm = EncryptionAlgorithm.AES_256_CBC,
-            ValidationAlgorithm = ValidationAlgorithm.HMACSHA256
-        });
-
-    Console.WriteLine("Data protection configured for production");
-}
-catch (FormatException)
-{
-    Console.WriteLine("CRITICAL ERROR: DataProtection__Key is not a valid base64 string!");
-    throw new InvalidOperationException("DataProtection__Key must be a valid base64-encoded string");
-}
-#endregion
+builder.Services.AddDataProtection()
+    .SetApplicationName("ScheduleManagementSystem");
 
 // Local auth
 builder.Services.AddAuthentication(options =>
