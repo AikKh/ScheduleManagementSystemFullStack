@@ -11,6 +11,36 @@
 @using ScheduleManagementSystem.Client.Services
 @using System.Text.RegularExpressions
 
+<div style="display: flex; gap: 20px; flex-wrap: wrap;">
+    <!-- Group Filter -->
+    <div>
+        <label for="groupFilter" style="margin-right: 8px; font-size: 14px; font-weight: 500; color: #0A3161;">Group:</label>
+        <select id="groupFilter" @bind="selectedGroupId" style="padding: 8px; border-radius: 4px; border: 1px solid #ddd;">
+            <option value="0">All Groups</option>
+            @foreach (var group in userGroups)
+            {
+                <option value="@group.Id">@group.Name</option>
+            }
+        </select>
+    </div>
+    <!-- Event Type Filter -->
+    <div>
+        <label for="typeFilter" style="margin-right: 8px; font-size: 14px; font-weight: 500; color: #0A3161;">Type:</label>
+        <select id="typeFilter" @bind="selectedEventType" style="padding: 8px; border-radius: 4px; border: 1px solid #ddd;">
+            <option value="">All Types</option>
+            @foreach (EventType type in Enum.GetValues<EventType>())
+            {
+                <option value="@type">@type.ToString()</option>
+            }
+        </select>
+    </div>
+    <!-- Search Filter -->
+    <div>
+        <label for="searchFilter" style="margin-right: 8px; font-size: 14px; font-weight: 500; color: #0A3161;">Search:</label>
+        <input id="searchFilter" @bind="searchTerm" placeholder="Search events..." style="padding: 8px; border-radius: 4px; border: 1px solid #ddd;" />
+    </div>
+</div>
+
 <div style="max-width: 1200px; margin: 0 auto; padding: 20px;">
     <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 30px; flex-wrap: wrap; gap: 20px;">
         <div>
@@ -278,6 +308,11 @@
     private string timeValidationError = "";
     private bool isSubmitting = false;
 
+    // Filters
+    private int selectedGroupId = 0;
+    private string selectedEventType = ""; 
+    private string searchTerm = ""; 
+
     protected override async Task OnInitializedAsync()
     {
         await LoadData();
@@ -334,10 +369,18 @@
             endDay = endDay.AddDays(1);
         }
 
+        var filteredEvents = events
+            .Where(e => (selectedGroupId == 0 || e.GroupId == selectedGroupId) &&
+                        (string.IsNullOrEmpty(selectedEventType) || e.Type.ToString() == selectedEventType) &&
+                        (string.IsNullOrEmpty(searchTerm) ||
+                         (e.Title?.Contains(searchTerm, StringComparison.OrdinalIgnoreCase) ?? false) ||
+                         (e.Description?.Contains(searchTerm, StringComparison.OrdinalIgnoreCase) ?? false)))
+            .ToList();
+
         // Generate all days
         for (var date = startDay; date <= endDay; date = date.AddDays(1))
         {
-            var dayEvents = events.Where(e => e.Date.Date == date.Date).ToList();
+            var dayEvents = filteredEvents.Where(e => e.Date.Date == date.Date).ToList();
 			dayEvents.Sort((a, b) => a.StartTime.CompareTo(b.StartTime));
 
             days.Add(new CalendarDay
