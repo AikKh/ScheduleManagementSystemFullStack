@@ -7,9 +7,6 @@ using System.Text;
 using System.Security.Claims;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.DataProtection;
-using Microsoft.Extensions.Options;
-using Microsoft.AspNetCore.DataProtection.AuthenticatedEncryption.ConfigurationModel;
-using Microsoft.AspNetCore.DataProtection.AuthenticatedEncryption;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -20,7 +17,7 @@ builder.Services.AddCors(options =>
         policy.WithOrigins("https://localhost:7273", "https://schedulemanagementsystemfullstackclient.onrender.com")
               .AllowAnyMethod()
               .AllowAnyHeader()
-              .AllowCredentials();
+              .AllowCredentials(); // Added this for cookies
     });
 });
 
@@ -30,7 +27,6 @@ builder.Services.AddEndpointsApiExplorer();
 
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
-        //.UseSnakeCaseNamingConvention()
 
 builder.Services.AddScoped<UserService>();
 builder.Services.AddScoped<AuthService>();
@@ -80,12 +76,11 @@ builder.Services.AddAuthentication(options =>
 })
 .AddCookie(CookieAuthenticationDefaults.AuthenticationScheme, options =>
 {
-    // This is ONLY used during OAuth flow, not for regular API auth
     options.Cookie.Name = "ScheduleApp.OAuth";
     options.Cookie.HttpOnly = true;
     options.Cookie.SameSite = SameSiteMode.Lax;
     options.Cookie.SecurePolicy = CookieSecurePolicy.Always;
-    options.ExpireTimeSpan = TimeSpan.FromMinutes(15); // Short-lived, just for OAuth
+    options.ExpireTimeSpan = TimeSpan.FromMinutes(15);
 })
 .AddGoogle(googleOptions =>
 {
@@ -95,17 +90,15 @@ builder.Services.AddAuthentication(options =>
 
     googleOptions.Scope.Add("email");
     googleOptions.Scope.Add("profile");
-    googleOptions.SaveTokens = false;
+    googleOptions.SaveTokens = true;
 
-    // DISABLE STATE VALIDATION - Simple but less secure
-    googleOptions.StateDataFormat = null;
-
-    googleOptions.CorrelationCookie.Name = "ScheduleApp.Correlation";
+    // More relaxed cookie settings for cloud deployment
+    googleOptions.CorrelationCookie.Name = "oauth_state";
     googleOptions.CorrelationCookie.HttpOnly = true;
-    googleOptions.CorrelationCookie.SameSite = SameSiteMode.Lax;
+    googleOptions.CorrelationCookie.SameSite = SameSiteMode.None; // More permissive for cross-site
     googleOptions.CorrelationCookie.SecurePolicy = CookieSecurePolicy.Always;
     googleOptions.CorrelationCookie.IsEssential = true;
-    googleOptions.CorrelationCookie.MaxAge = TimeSpan.FromMinutes(15);
+    googleOptions.CorrelationCookie.MaxAge = TimeSpan.FromMinutes(30); // Longer timeout
 });
 
 builder.Services.AddAuthorization();
@@ -120,11 +113,10 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
-//app.UseStaticFiles();
-
-app.MapControllers();
 
 app.UseAuthentication();
 app.UseAuthorization();
+
+app.MapControllers();
 
 app.Run();

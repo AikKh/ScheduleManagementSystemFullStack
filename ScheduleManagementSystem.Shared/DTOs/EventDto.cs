@@ -41,6 +41,8 @@ public class EventUpdateDto
     public TimeSpan? EndTime { get; set; }
 
     public EventType? Type { get; set; }
+
+    public int? GroupId { get; set; }
 }
 
 public class EventSummaryDto : EventCreateDto

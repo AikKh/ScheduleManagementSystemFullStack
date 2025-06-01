@@ -32,7 +32,6 @@ public class EventService(AppDbContext context)
 
         var eventDtos = new List<EventResponseDto>();
 
-
         foreach (var group in user.Groups)
         {
             foreach (var evt in group.Events)
@@ -42,6 +41,28 @@ public class EventService(AppDbContext context)
         }
 
         return eventDtos;
+    }
+
+    private async Task<Event?> CheckEventConflictAsync(int groupId, DateTime date, TimeSpan startTime, TimeSpan endTime, int? excludeEventId = null)
+    {
+        // Get all events in the same group on the same date
+        var existingEvents = await _context.Events
+            .Where(e => e.GroupId == groupId &&
+                       e.Date.Date == date.Date &&
+                       (excludeEventId == null || e.Id != excludeEventId))
+            .ToListAsync();
+
+        foreach (var existingEvent in existingEvents)
+        {
+            bool hasOverlap = startTime < existingEvent.EndTime && endTime > existingEvent.StartTime;
+
+            if (hasOverlap)
+            {
+                return existingEvent;
+            }
+        }
+
+        return null;
     }
 
     public async Task<EventResponseDto> CreateEventAsync(EventCreateDto eventDto, string email)
@@ -54,6 +75,25 @@ public class EventService(AppDbContext context)
 
         var group = user.Groups.FirstOrDefault(g => g.Id == eventDto.GroupId)
             ?? throw new KeyNotFoundException($"Group with ID {eventDto.GroupId} not found.");
+
+        if (eventDto.StartTime >= eventDto.EndTime)
+        {
+            throw new InvalidOperationException("Event start time must be before end time.");
+        }
+
+        var conflictingEvent = await CheckEventConflictAsync(
+            eventDto.GroupId,
+            eventDto.Date,
+            eventDto.StartTime,
+            eventDto.EndTime);
+
+        if (conflictingEvent != null)
+        {
+            throw new InvalidOperationException(
+                $"Event conflicts with existing event '{conflictingEvent.Title}' " +
+                $"on {conflictingEvent.Date.ToShortDateString()} " +
+                $"from {conflictingEvent.StartTime} to {conflictingEvent.EndTime}.");
+        }
 
         var eventEntity = EventMapper.FromEventCreateDto(eventDto);
         eventEntity.Group = group;
@@ -81,6 +121,47 @@ public class EventService(AppDbContext context)
         if (!userGroupIds.Contains(eventToUpdate.GroupId))
             throw new UnauthorizedAccessException($"You don't have access to update events in group {eventToUpdate.GroupId}");
 
+        var targetGroupId = eventDto.GroupId ?? eventToUpdate.GroupId;
+
+        if (eventDto.GroupId.HasValue && eventDto.GroupId.Value != eventToUpdate.GroupId)
+        {
+            if (!userGroupIds.Contains(eventDto.GroupId.Value))
+                throw new UnauthorizedAccessException($"You don't have access to move events to group {eventDto.GroupId.Value}");
+
+            var destinationGroup = await _context.Groups.FindAsync(eventDto.GroupId.Value) 
+                ?? throw new KeyNotFoundException($"Destination group with ID {eventDto.GroupId.Value} not found.");
+        }
+
+        var updatedDate = eventDto.Date ?? eventToUpdate.Date;
+        var updatedStartTime = eventDto.StartTime ?? eventToUpdate.StartTime;
+        var updatedEndTime = eventDto.EndTime ?? eventToUpdate.EndTime;
+
+        // Validate that start time is before end time
+        if (updatedStartTime >= updatedEndTime)
+        {
+            throw new InvalidOperationException("Event start time must be before end time.");
+        }
+
+        var conflictingEvent = await CheckEventConflictAsync(
+            targetGroupId,
+            updatedDate,
+            updatedStartTime,
+            updatedEndTime,
+            eventId);
+
+        if (conflictingEvent != null)
+        {
+            var groupMessage = targetGroupId == eventToUpdate.GroupId
+                ? "in the same group"
+                : $"in the destination group (ID: {targetGroupId})";
+
+            throw new InvalidOperationException(
+                $"Updated event would conflict with existing event '{conflictingEvent.Title}' " +
+                $"{groupMessage} on {conflictingEvent.Date.ToShortDateString()} " +
+                $"from {conflictingEvent.StartTime} to {conflictingEvent.EndTime}.");
+        }
+
+        // Apply the updates
         if (eventDto.Title is not null)
             eventToUpdate.Title = eventDto.Title;
 
@@ -99,10 +180,18 @@ public class EventService(AppDbContext context)
         if (eventDto.Type.HasValue)
             eventToUpdate.Type = eventDto.Type.Value;
 
+        if (eventDto.GroupId.HasValue)
+            eventToUpdate.GroupId = eventDto.GroupId.Value;
+
         _context.Events.Update(eventToUpdate);
         await _context.SaveChangesAsync();
 
-        return EventMapper.ToEventResponseDto(eventToUpdate);
+        // Reload the event with updated group information
+        var updatedEventWithGroup = await _context.Events
+            .Include(e => e.Group)
+            .FirstAsync(e => e.Id == eventId);
+
+        return EventMapper.ToEventResponseDto(updatedEventWithGroup);
     }
 
     public async Task<bool> DeleteEventAsync(int eventId, string email)
@@ -126,5 +215,4 @@ public class EventService(AppDbContext context)
 
         return true;
     }
-
 }

@@ -86,12 +86,23 @@
                             @foreach (var calendarEvent in day.Events)
                             {
                                 var eventBgColor = GetEventBackgroundColor(calendarEvent.Type);
-                                var eventTime = SafeFormatTimeSpan(calendarEvent.StartTime);
+                                var eventStartTime = SafeFormatTimeSpan(calendarEvent.StartTime);
+                                var eventEndTime = SafeFormatTimeSpan(calendarEvent.EndTime);
 
-                                <div style="background-color: @eventBgColor; color: white; padding: 4px 6px; border-radius: 4px; font-size: 11px; line-height: 1.2; cursor: pointer; position: relative; overflow: hidden; display: flex; justify-content: space-between; align-items: center;"
-                                     @onclick="@(() => ShowEventDetails(calendarEvent))">
-                                    <span style="flex: 1; font-weight: 500; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">@(calendarEvent.Title ?? "Untitled")</span>
-                                    <span style="font-size: 10px; opacity: 0.9; margin-left: 4px;">@eventTime</span>
+                                var truncatedTitle = (calendarEvent.Title ?? "Untitled");
+
+                                @if (truncatedTitle.Length > 12)
+                                {
+                                    truncatedTitle = truncatedTitle.Substring(0, 12) + "...";
+                                }
+
+                                <div style="background-color: @eventBgColor; color: white; padding: 4px 6px; border-radius: 4px; font-size: 11px; line-height: 1.2; cursor: pointer; overflow: hidden; display: block; width: 100%;"
+                                     @onclick="@(() => ShowEventDetails(calendarEvent))"
+                                     title="@(calendarEvent.Title ?? "Untitled")">
+                                    <div style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
+                                        <span style="font-weight: 500; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 70%;">@truncatedTitle</span>
+                                        <span style="font-size: 10px; opacity: 0.9; flex-shrink: 0;">@eventStartTime-@eventEndTime</span>
+                                    </div>
                                 </div>
                             }
                         </div>
@@ -327,6 +338,7 @@
         for (var date = startDay; date <= endDay; date = date.AddDays(1))
         {
             var dayEvents = events.Where(e => e.Date.Date == date.Date).ToList();
+			dayEvents.Sort((a, b) => a.StartTime.CompareTo(b.StartTime));
 
             days.Add(new CalendarDay
                 {
@@ -517,7 +529,8 @@
                         Date = DateTime.SpecifyKind(eventForm.Date, DateTimeKind.Utc),
                         StartTime = startTime,
                         EndTime = endTime,
-                        Type = eventForm.Type
+                        Type = eventForm.Type,
+						GroupId = eventForm.GroupId
                     };
 
                 var updatedEvent = await EventService.UpdateEventAsync(editingEvent.Id, updateDto);
