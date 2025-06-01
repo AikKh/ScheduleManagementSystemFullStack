@@ -1,7 +1,6 @@
 ﻿using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Google;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Http.Extensions;
 using Microsoft.AspNetCore.Mvc;
 using ScheduleManagementSystem.API.Services;
 using System.Security.Claims;
@@ -19,19 +18,26 @@ public class GoogleAuthController(IConfiguration configuration, AuthService auth
     [AllowAnonymous]
     public IActionResult Login([FromQuery] string returnUrl = "/")
     {
-        // Build the full callback URL to ensure it's correct
-        var callbackUrl = Url.Action(nameof(Callback), "GoogleAuth", new { returnUrl }, Request.Scheme);
-
-        var properties = new AuthenticationProperties
+        try
         {
-            RedirectUri = callbackUrl,
-            Items =
+            var properties = new AuthenticationProperties
             {
-                { "returnUrl", returnUrl }
-            }
-        };
+                RedirectUri = Url.Action(nameof(Callback), new { returnUrl }),
+                Items =
+                {
+                    { "returnUrl", returnUrl }
+                }
+            };
 
-        return Challenge(properties, GoogleDefaults.AuthenticationScheme);
+            return Challenge(properties, GoogleDefaults.AuthenticationScheme);
+        }
+        catch (Exception ex)
+        {
+            // Log the actual error to see what's happening
+            Console.WriteLine($"Error in Google Login: {ex.Message}");
+            Console.WriteLine($"Stack trace: {ex.StackTrace}");
+            return StatusCode(500, new { error = ex.Message });
+        }
     }
 
     [HttpGet("callback")]
@@ -44,8 +50,12 @@ public class GoogleAuthController(IConfiguration configuration, AuthService auth
 
             if (!result.Succeeded)
             {
-                Console.WriteLine($"Google auth failed: {result.Failure?.Message}");
-                return RedirectToFrontend("/login", $"Google authentication failed: {result.Failure?.Message}");
+                var errorMsg = result.Failure?.Message ?? "Google authentication failed";
+                Console.WriteLine($"Google auth failed: {errorMsg}");
+
+                // Redirect to frontend with error
+                var frontendUrl = GetFrontendUrl();
+                return Redirect($"{frontendUrl}/login?error={Uri.EscapeDataString(errorMsg)}");
             }
 
             // Extract user information from claims
@@ -55,7 +65,8 @@ public class GoogleAuthController(IConfiguration configuration, AuthService auth
 
             if (string.IsNullOrEmpty(email) || string.IsNullOrEmpty(name) || string.IsNullOrEmpty(googleId))
             {
-                return RedirectToFrontend("/login", "Failed to retrieve user information from Google");
+                var frontendUrl = GetFrontendUrl();
+                return Redirect($"{frontendUrl}/login?error={Uri.EscapeDataString("Failed to retrieve user information from Google")}");
             }
 
             // Use your AuthService to authenticate/create user
@@ -65,57 +76,34 @@ public class GoogleAuthController(IConfiguration configuration, AuthService auth
             Response.Cookies.Append("access_token", $"Bearer {token}", new CookieOptions
             {
                 HttpOnly = true,
-                Secure = !HttpContext.Request.Host.Host.Contains("localhost"), // Only secure in production
+                Secure = true,
                 SameSite = SameSiteMode.Lax,
-                MaxAge = TimeSpan.FromDays(7),
-                Domain = GetCookieDomain() // Set appropriate domain
+                MaxAge = TimeSpan.FromDays(7)
             });
 
-            // Redirect to frontend success page
-            return RedirectToFrontend(returnUrl.StartsWith('/') ? returnUrl : "/");
+            // Redirect to frontend
+            var successUrl = GetFrontendUrl();
+            return Redirect($"{successUrl}{returnUrl}");
         }
         catch (Exception ex)
         {
             Console.WriteLine($"Google auth error: {ex.Message}");
             Console.WriteLine($"Stack trace: {ex.StackTrace}");
 
-            return RedirectToFrontend("/login", ex.Message);
+            var frontendUrl = GetFrontendUrl();
+            return Redirect($"{frontendUrl}/login?error={Uri.EscapeDataString(ex.Message)}");
         }
-    }
-
-    private IActionResult RedirectToFrontend(string path, string? error = null)
-    {
-        // Get the frontend URL from configuration or environment
-        var frontendUrl = GetFrontendUrl();
-
-        var redirectUrl = $"{frontendUrl}{path}";
-
-        if (!string.IsNullOrEmpty(error))
-        {
-            var separator = path.Contains("?") ? "&" : "?";
-            redirectUrl += $"{separator}error={Uri.EscapeDataString(error)}";
-        }
-
-        return Redirect(redirectUrl);
     }
 
     private string GetFrontendUrl()
     {
-        if (HttpContext.Request.Host.Host.Contains("localhost"))
+        // Simple approach - check if localhost
+        if (Request.Host.Host.Contains("localhost"))
         {
             return "https://localhost:7273";
         }
 
+        // Production - make sure this matches your actual frontend URL
         return "https://schedulemanagementsystemfullstackclient.onrender.com";
-    }
-
-    private string? GetCookieDomain()
-    {
-        if (HttpContext.Request.Host.Host.Contains("localhost"))
-        {
-            return null;
-        }
-
-        return null;
     }
 }

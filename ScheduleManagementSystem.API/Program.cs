@@ -38,17 +38,8 @@ builder.Services.AddScoped<JwtService>();
 builder.Services.AddScoped<EventService>();
 builder.Services.AddScoped<GroupService>();
 
-var dataProtectionKey = builder.Configuration["DataProtectionKey"] ?? "MyFixedDataProtectionKey32Chars!";
-
 builder.Services.AddDataProtection()
-    .SetApplicationName("ScheduleManagementSystem")
-    .SetDefaultKeyLifetime(TimeSpan.FromDays(90)) 
-    .DisableAutomaticKeyGeneration()  // Don't auto-generate new keys
-    .UseCryptographicAlgorithms(new Microsoft.AspNetCore.DataProtection.AuthenticatedEncryption.ConfigurationModel.AuthenticatedEncryptorConfiguration()
-    {
-        EncryptionAlgorithm = Microsoft.AspNetCore.DataProtection.AuthenticatedEncryption.EncryptionAlgorithm.AES_256_CBC,
-        ValidationAlgorithm = Microsoft.AspNetCore.DataProtection.AuthenticatedEncryption.ValidationAlgorithm.HMACSHA256
-    });
+    .SetApplicationName("ScheduleManagementSystem");
 
 // Local auth
 builder.Services.AddAuthentication(options =>
