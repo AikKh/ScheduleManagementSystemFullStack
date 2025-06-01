@@ -39,7 +39,8 @@ builder.Services.AddScoped<EventService>();
 builder.Services.AddScoped<GroupService>();
 
 builder.Services.AddDataProtection()
-    .SetApplicationName("ScheduleManagementSystem");
+    .SetApplicationName("ScheduleManagementSystem")
+    .SetDefaultKeyLifetime(TimeSpan.FromDays(30));
 
 // Local auth
 builder.Services.AddAuthentication(options =>
@@ -94,7 +95,10 @@ builder.Services.AddAuthentication(options =>
 
     googleOptions.Scope.Add("email");
     googleOptions.Scope.Add("profile");
-    googleOptions.SaveTokens = true;
+    googleOptions.SaveTokens = false;
+
+    // DISABLE STATE VALIDATION - Simple but less secure
+    googleOptions.StateDataFormat = null;
 
     googleOptions.CorrelationCookie.Name = "ScheduleApp.Correlation";
     googleOptions.CorrelationCookie.HttpOnly = true;
