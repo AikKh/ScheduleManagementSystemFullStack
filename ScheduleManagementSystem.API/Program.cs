@@ -17,9 +17,10 @@ builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowBlazorApp", policy =>
     {
-        policy.WithOrigins("https://localhost:7273", "https://schedulemanagementsystemfullstackclient.onrender.com") // Replace with your Blazor app's URLs
+        policy.WithOrigins("https://localhost:7273", "https://schedulemanagementsystemfullstackclient.onrender.com")
               .AllowAnyMethod()
-              .AllowAnyHeader();
+              .AllowAnyHeader()
+              .AllowCredentials();
     });
 });
 
@@ -37,8 +38,17 @@ builder.Services.AddScoped<JwtService>();
 builder.Services.AddScoped<EventService>();
 builder.Services.AddScoped<GroupService>();
 
+var dataProtectionKey = builder.Configuration["DataProtectionKey"] ?? "MyFixedDataProtectionKey32Chars!";
+
 builder.Services.AddDataProtection()
-    .SetApplicationName("ScheduleManagementSystem");
+    .SetApplicationName("ScheduleManagementSystem")
+    .SetDefaultKeyLifetime(TimeSpan.FromDays(90)) 
+    .DisableAutomaticKeyGeneration()  // Don't auto-generate new keys
+    .UseCryptographicAlgorithms(new Microsoft.AspNetCore.DataProtection.AuthenticatedEncryption.ConfigurationModel.AuthenticatedEncryptorConfiguration()
+    {
+        EncryptionAlgorithm = Microsoft.AspNetCore.DataProtection.AuthenticatedEncryption.EncryptionAlgorithm.AES_256_CBC,
+        ValidationAlgorithm = Microsoft.AspNetCore.DataProtection.AuthenticatedEncryption.ValidationAlgorithm.HMACSHA256
+    });
 
 // Local auth
 builder.Services.AddAuthentication(options =>
@@ -101,15 +111,6 @@ builder.Services.AddAuthentication(options =>
     googleOptions.CorrelationCookie.SecurePolicy = CookieSecurePolicy.Always;
     googleOptions.CorrelationCookie.IsEssential = true;
     googleOptions.CorrelationCookie.MaxAge = TimeSpan.FromMinutes(15);
-
-    googleOptions.Events.OnRemoteFailure = context =>
-    {
-        Console.WriteLine($"Google OAuth failed: {context.Failure?.Message}");
-        var errorMessage = context.Failure?.Message ?? "Google authentication failed";
-        context.Response.Redirect($"/login?error={Uri.EscapeDataString(errorMessage)}");
-        context.HandleResponse();
-        return Task.CompletedTask;
-    };
 });
 
 builder.Services.AddAuthorization();
