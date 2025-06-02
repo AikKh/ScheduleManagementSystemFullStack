@@ -81,7 +81,7 @@ builder.Services.AddAuthentication(options =>
 {
     options.Cookie.Name = "ScheduleApp.OAuth";
     options.Cookie.HttpOnly = true;
-    options.Cookie.SameSite = SameSiteMode.Lax;
+    options.Cookie.SameSite = SameSiteMode.None;
     options.Cookie.SecurePolicy = CookieSecurePolicy.Always;
     options.ExpireTimeSpan = TimeSpan.FromMinutes(15);
 })
