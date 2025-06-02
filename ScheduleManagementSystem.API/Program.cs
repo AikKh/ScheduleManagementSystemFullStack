@@ -9,6 +9,7 @@ using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.Authentication.OAuth;
 using Microsoft.AspNetCore.Authentication.Google;
+using Microsoft.AspNetCore.HttpOverrides;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -41,6 +42,12 @@ builder.Services.AddScoped<GroupService>();
 builder.Services.AddDataProtection()
     .SetApplicationName("ScheduleManagementSystem")
     .SetDefaultKeyLifetime(TimeSpan.FromDays(30));
+
+builder.Services.Configure<ForwardedHeadersOptions>(options =>
+{
+    options.ForwardedHeaders = ForwardedHeaders.XForwardedProto | ForwardedHeaders.XForwardedFor;
+    options.KnownProxies.Clear(); // Accept any proxy (note security implications)
+});
 
 // Local auth
 builder.Services.AddAuthentication(options =>
@@ -137,6 +144,8 @@ builder.Services.AddAuthentication(options =>
 builder.Services.AddAuthorization();
 
 var app = builder.Build();
+
+app.UseForwardedHeaders();
 
 app.UseHttpsRedirection();
 app.UseRouting();
