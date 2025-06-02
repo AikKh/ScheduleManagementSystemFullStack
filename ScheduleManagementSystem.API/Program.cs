@@ -138,6 +138,7 @@ builder.Services.AddAuthorization();
 
 var app = builder.Build();
 
+app.UseHttpsRedirection();
 app.UseRouting();
 
 app.UseCors("AllowBlazorApp");
@@ -147,7 +148,6 @@ if (app.Environment.IsDevelopment())
     app.MapOpenApi();
 }
 
-app.UseHttpsRedirection();
 
 app.UseAuthentication();
 app.UseAuthorization();
