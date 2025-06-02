@@ -56,7 +56,7 @@ public class GoogleAuthController(IConfiguration configuration, AuthService auth
 
                 // Redirect to frontend with error
                 var frontendUrl = GetFrontendUrl();
-                return Redirect($"{frontendUrl}/login?error={Uri.EscapeDataString(errorMsg) + ", !result.Succeeded"}");
+                return Redirect($"{frontendUrl}/login?error={Uri.EscapeDataString(errorMsg)}");
             }
 
             // Extract user information from claims
@@ -67,7 +67,7 @@ public class GoogleAuthController(IConfiguration configuration, AuthService auth
             if (string.IsNullOrEmpty(email) || string.IsNullOrEmpty(name) || string.IsNullOrEmpty(googleId))
             {
                 var frontendUrl = GetFrontendUrl();
-                return Redirect($"{frontendUrl}/login?error={Uri.EscapeDataString("Failed to retrieve user information from Google ooo")}");
+                return Redirect($"{frontendUrl}/login?error={Uri.EscapeDataString("Failed to retrieve user information from Google")}");
             }
 
             // Use your AuthService to authenticate/create user
@@ -90,7 +90,7 @@ public class GoogleAuthController(IConfiguration configuration, AuthService auth
 
             // Redirect to frontend
             var successUrl = GetFrontendUrl();
-            return Redirect($"{successUrl}/{returnUrl}");
+            return Redirect($"{successUrl}{returnUrl}");
         }
         catch (Exception ex)
         {
@@ -98,7 +98,7 @@ public class GoogleAuthController(IConfiguration configuration, AuthService auth
             Console.WriteLine($"Stack trace: {ex.StackTrace}");
 
             var frontendUrl = GetFrontendUrl();
-            return Redirect($"{frontendUrl}/login?error={Uri.EscapeDataString(ex.Message) + "aaa"}");
+            return Redirect($"{frontendUrl}/login?error={Uri.EscapeDataString(ex.Message)}");
         }
     }
 
