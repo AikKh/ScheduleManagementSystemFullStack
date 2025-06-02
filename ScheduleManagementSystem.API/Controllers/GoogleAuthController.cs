@@ -46,6 +46,7 @@ public class GoogleAuthController(IConfiguration configuration, AuthService auth
     {
         try
         {
+            // Authenticate the user
             var result = await HttpContext.AuthenticateAsync(GoogleDefaults.AuthenticationScheme);
 
             if (!result.Succeeded)
@@ -77,9 +78,15 @@ public class GoogleAuthController(IConfiguration configuration, AuthService auth
             {
                 HttpOnly = true,
                 Secure = true,
-                SameSite = SameSiteMode.Lax,
+                SameSite = SameSiteMode.None, // Changed to None for cross-site scenarios
                 MaxAge = TimeSpan.FromDays(7)
             });
+
+            // Get return URL from properties if available
+            if (result.Properties?.Items.TryGetValue("returnUrl", out var storedReturnUrl) == true)
+            {
+                returnUrl = storedReturnUrl;
+            }
 
             // Redirect to frontend
             var successUrl = GetFrontendUrl();

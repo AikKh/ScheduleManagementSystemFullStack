@@ -7,14 +7,17 @@ using System.Text;
 using System.Security.Claims;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.DataProtection;
+using Microsoft.AspNetCore.Authentication.OAuth;
 
 var builder = WebApplication.CreateBuilder(args);
+
+string frontUrl = "https://schedulemanagementsystemfullstackclient.onrender.com";
 
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowBlazorApp", policy =>
     {
-        policy.WithOrigins("https://localhost:7273", "https://schedulemanagementsystemfullstackclient.onrender.com")
+        policy.WithOrigins("https://localhost:7273", frontUrl)
               .AllowAnyMethod()
               .AllowAnyHeader()
               .AllowCredentials(); // Added this for cookies
@@ -92,13 +95,39 @@ builder.Services.AddAuthentication(options =>
     googleOptions.Scope.Add("profile");
     googleOptions.SaveTokens = true;
 
-    // More relaxed cookie settings for cloud deployment
+    // More permissive cookie settings
     googleOptions.CorrelationCookie.Name = "oauth_state";
     googleOptions.CorrelationCookie.HttpOnly = true;
-    googleOptions.CorrelationCookie.SameSite = SameSiteMode.None; // More permissive for cross-site
+    googleOptions.CorrelationCookie.SameSite = SameSiteMode.None; // Critical for cross-site redirects
     googleOptions.CorrelationCookie.SecurePolicy = CookieSecurePolicy.Always;
     googleOptions.CorrelationCookie.IsEssential = true;
-    googleOptions.CorrelationCookie.MaxAge = TimeSpan.FromMinutes(30); // Longer timeout
+
+    // Extend timeout to handle potential network delays
+    googleOptions.CorrelationCookie.MaxAge = TimeSpan.FromMinutes(30);
+
+    // Add events to debug the authentication flow
+    googleOptions.Events = new OAuthEvents
+    {
+        OnRedirectToAuthorizationEndpoint = context =>
+        {
+            Console.WriteLine($"Redirecting to Google: {context.RedirectUri}");
+            context.Response.Redirect(context.RedirectUri);
+            return Task.CompletedTask;
+        },
+        OnTicketReceived = context =>
+        {
+            Console.WriteLine("Google authentication successful");
+            return Task.CompletedTask;
+        },
+        OnRemoteFailure = context =>
+        {
+            Console.WriteLine($"Remote authentication failure: {context.Failure?.Message}");
+            var frontendUrl = frontUrl; // Ensure this method exists
+            context.Response.Redirect($"{frontendUrl}/login?error={Uri.EscapeDataString(context.Failure?.Message ?? "Authentication failed")}");
+            context.HandleResponse();
+            return Task.CompletedTask;
+        }
+    };
 });
 
 builder.Services.AddAuthorization();
