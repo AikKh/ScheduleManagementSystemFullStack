@@ -88,7 +88,7 @@ builder.Services.AddAuthentication(options =>
         }
     };
 })
-.AddCookie(CookieAuthenticationDefaults.AuthenticationScheme, options =>
+.AddCookie(options =>
 {
     options.Cookie.Name = "ScheduleApp.OAuth";
     options.Cookie.HttpOnly = true;
@@ -96,10 +96,10 @@ builder.Services.AddAuthentication(options =>
     options.Cookie.SecurePolicy = CookieSecurePolicy.Always;
     options.ExpireTimeSpan = TimeSpan.FromMinutes(15);
 })
-.AddGoogle(GoogleDefaults.AuthenticationScheme, googleOptions =>
+.AddGoogle(googleOptions =>
 {
-    googleOptions.ClientId = builder.Configuration["Authentication:Google:ClientId"] ?? "";
-    googleOptions.ClientSecret = builder.Configuration["Authentication:Google:ClientSecret"] ?? "";
+    googleOptions.ClientId = builder.Configuration["Authentication:Google:ClientId"];
+    googleOptions.ClientSecret = builder.Configuration["Authentication:Google:ClientSecret"];
     googleOptions.CallbackPath = "/api/google_auth/callback";
 
     googleOptions.Scope.Add("email");
