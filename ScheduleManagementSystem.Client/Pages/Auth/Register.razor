@@ -55,18 +55,6 @@
         </button>
     </EditForm>
 
-    <div class="divider">
-        <span>OR</span>
-    </div>
-
-    <button @onclick="HandleGoogleLogin" class="btn btn-google btn-block" disabled="@isLoading">
-        Continue with Google
-    </button>
-
-    <div class="terms">
-        By creating an account, you agree to our <a href="#">Terms of Service</a> and <a href="#">Privacy Policy</a>.
-    </div>
-
     <div class="account-links">
         Already have an account? <a href="/login">Sign in</a>
     </div>
@@ -110,11 +98,5 @@
         {
             isLoading = false;
         }
-    }
-
-    private void HandleGoogleLogin()
-    {
-        // Redirect to the Google login endpoint
-        NavigationManager.NavigateTo("/api/google_auth/login?returnUrl=/api/user/profile", true);
     }
 }

@@ -505,14 +505,12 @@
                 isAdmin = user.Role.Equals("Admin", StringComparison.OrdinalIgnoreCase);
                 isTeacher = user.Role.Equals("Teacher", StringComparison.OrdinalIgnoreCase);
 
-                // Initialize profile form with current data
                 profileForm = new UpdateUserDto
                     {
                         Username = user.Username,
                         Email = user.Email
                     };
 
-                // Set default tab for admin/teacher
                 if (isAdmin)
                 {
                     activeTab = "admin";
@@ -598,7 +596,6 @@
     private void SetActiveTab(string tab)
     {
         activeTab = tab;
-        // Clear any existing messages when switching tabs
         adminMessage = "";
         teacherMessage = "";
     }
@@ -721,7 +718,6 @@
             var success = await UserService.DeleteAccountAsync(deleteRequest);
             if (success)
             {
-                // Account deleted successfully - logout and redirect
                 await AuthService.LogoutAsync();
                 NavigationManager.NavigateTo("/", true);
             }

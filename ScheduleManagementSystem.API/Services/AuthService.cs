@@ -34,44 +34,4 @@ public class AuthService(AppDbContext context, JwtService jwtService)
         var user_dto = UserMapper.ToUserResponseDto(user);
         return (user_dto, token);
     }
-
-    public async Task<(UserResponseDto, string)> AuthenticateGoogleAsync(string email, string providerId, string name)
-    {
-        var user = await _context.Users
-            .Include(u => u.AuthMethods)
-            .FirstOrDefaultAsync(u => u.Email == email);
-
-        if (user == null)
-        {
-            user = new User
-            {
-                Email = email,
-                Username = name,
-                Role = UserRole.Student, // Hardcoded for now
-                AuthMethods =
-                [
-                    new AuthMethod
-                    {
-                        Provider = AuthProvider.Google,
-                        ProviderUserId = providerId
-                    }
-                ]
-            };
-
-            _context.Users.Add(user);
-            await _context.SaveChangesAsync();
-        }
-        else
-        {
-            var authMethod = user.AuthMethods.FirstOrDefault(a => a.Provider == AuthProvider.Google);
-            
-            if (authMethod == null || authMethod.Provider != AuthProvider.Google)
-            {
-                throw new InvalidOperationException($"User doesn't have authorization method");
-            }
-        }
-
-        var token = _jwtService.GenerateJwtToken(user);
-        return (UserMapper.ToUserResponseDto(user), token);
-    }
 }

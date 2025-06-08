@@ -43,14 +43,6 @@
         </button>
     </EditForm>
 
-    <div class="divider">
-        <span>OR</span>
-    </div>
-
-    <button @onclick="HandleGoogleLogin" class="btn btn-google btn-block" disabled="@isLoading">
-        Continue with Google
-    </button>
-
     <div class="account-links">
         Don't have an account? <a href="/register">Sign up</a>
     </div>
@@ -133,23 +125,6 @@
         }
         finally
         {
-            isLoading = false;
-        }
-    }
-
-    private void HandleGoogleLogin()
-    {
-        if (isLoading) return;
-
-        isLoading = true;
-
-        try
-        {
-            AuthService.LoginWithGoogle();
-        }
-        catch (Exception ex)
-        {
-            errorMessage = $"Failed to initiate Google login: {ex.Message}";
             isLoading = false;
         }
     }

@@ -186,7 +186,6 @@ public class EventService(AppDbContext context)
         _context.Events.Update(eventToUpdate);
         await _context.SaveChangesAsync();
 
-        // Reload the event with updated group information
         var updatedEventWithGroup = await _context.Events
             .Include(e => e.Group)
             .FirstAsync(e => e.Id == eventId);

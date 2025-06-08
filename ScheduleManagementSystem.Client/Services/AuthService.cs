@@ -92,23 +92,4 @@ public class AuthService(
         var token = await _localStorageService.GetItem<string>("authToken");
         return !string.IsNullOrEmpty(token);
     }
-
-    public void LoginWithGoogle()
-    {
-        try
-        {
-            var currentUri = _navigationManager.ToAbsoluteUri(_navigationManager.Uri);
-            var blazorBaseUrl = $"{currentUri.Scheme}://{currentUri.Authority}";
-
-            var googleLoginUrl = $"{_httpClient.BaseAddress}api/google_auth/login";
-
-            _navigationManager.NavigateTo(googleLoginUrl, forceLoad: true);
-        }
-        catch (Exception ex)
-        {
-            Console.WriteLine($"Error initiating Google login: {ex.Message}");
-            throw new Exception($"Failed to start Google authentication: {ex.Message}");
-        }
-    }
-
 }

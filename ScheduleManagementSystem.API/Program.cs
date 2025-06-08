@@ -23,7 +23,7 @@ builder.Services.AddCors(options =>
         policy.WithOrigins("https://localhost:7273", frontUrl)
               .AllowAnyMethod()
               .AllowAnyHeader()
-              .AllowCredentials(); // Added this for cookies
+              .AllowCredentials();
     });
 });
 
@@ -52,14 +52,13 @@ builder.Services.Configure<CookiePolicyOptions>(options => {
 builder.Services.Configure<ForwardedHeadersOptions>(options =>
 {
     options.ForwardedHeaders = ForwardedHeaders.XForwardedProto | ForwardedHeaders.XForwardedFor;
-    options.KnownProxies.Clear(); // Accept any proxy (note security implications)
+    options.KnownProxies.Clear(); 
 });
 
 // Local auth
 builder.Services.AddAuthentication(options =>
 {
     options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
-    //options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
     options.DefaultChallengeScheme = GoogleDefaults.AuthenticationScheme;
     options.DefaultScheme = CookieAuthenticationDefaults.AuthenticationScheme;
 
@@ -83,7 +82,6 @@ builder.Services.AddAuthentication(options =>
     {
         OnTokenValidated = context =>
         {
-            // Map the role claim to ClaimTypes.Role
             var roleClaim = context.Principal?.FindFirst("role");
             if (roleClaim != null)
             {
@@ -101,52 +99,6 @@ builder.Services.AddAuthentication(options =>
     options.Cookie.SameSite = SameSiteMode.None;
     options.Cookie.SecurePolicy = CookieSecurePolicy.Always;
     options.ExpireTimeSpan = TimeSpan.FromMinutes(15);
-})
-.AddGoogle(googleOptions =>
-{
-    googleOptions.ClientId = builder.Configuration["Authentication:Google:ClientId"];
-    googleOptions.ClientSecret = builder.Configuration["Authentication:Google:ClientSecret"];
-    googleOptions.CallbackPath = "/api/google_auth/callback";
-
-    googleOptions.Scope.Add("email");
-    googleOptions.Scope.Add("profile");
-    googleOptions.SaveTokens = true;
-
-    // More permissive cookie settings
-    googleOptions.CorrelationCookie.Name = "oauth_state";
-    googleOptions.CorrelationCookie.HttpOnly = true;
-    googleOptions.CorrelationCookie.SameSite = SameSiteMode.None; // Critical for cross-site redirects
-    googleOptions.CorrelationCookie.SecurePolicy = CookieSecurePolicy.Always;
-    googleOptions.SaveTokens = true;
-
-    googleOptions.CorrelationCookie.IsEssential = true;
-
-    // Extend timeout to handle potential network delays
-    googleOptions.CorrelationCookie.MaxAge = TimeSpan.FromMinutes(30);
-
-    // Add events to debug the authentication flow
-    googleOptions.Events = new OAuthEvents
-    {
-        OnRedirectToAuthorizationEndpoint = context =>
-        {
-            Console.WriteLine($"Redirecting to Google: {context.RedirectUri}");
-            context.Response.Redirect(context.RedirectUri);
-            return Task.CompletedTask;
-        },
-        OnTicketReceived = context =>
-        {
-            Console.WriteLine("Google authentication successful");
-            return Task.CompletedTask;
-        },
-        OnRemoteFailure = context =>
-        {
-            Console.WriteLine($"Remote authentication failure: {context.Failure?.Message}");
-            var frontendUrl = frontUrl; // Ensure this method exists
-            context.Response.Redirect($"{frontendUrl}/login?error={Uri.EscapeDataString(context.Failure?.Message ?? "Authentication failed")}");
-            context.HandleResponse();
-            return Task.CompletedTask;
-        }
-    };
 });
 
 builder.Services.AddAuthorization();

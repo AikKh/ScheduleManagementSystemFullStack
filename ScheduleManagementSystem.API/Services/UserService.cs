@@ -133,7 +133,6 @@ public class UserService(AppDbContext context)
             .FirstOrDefaultAsync(u => u.Email == email)
             ?? throw new Exception($"User with email <{email}> not found.");
 
-        // For local auth users, verify password before deletion
         var localAuthMethod = user.AuthMethods.FirstOrDefault(a => a.Provider == AuthProvider.Local);
         if (localAuthMethod != null)
         {
@@ -147,10 +146,7 @@ public class UserService(AppDbContext context)
                 throw new InvalidOperationException("Incorrect password. Account deletion failed.");
             }
         }
-        // For Google auth users, we might want to skip password verification
-        // or implement a different verification method
 
-        // Remove the user (this will cascade delete auth methods due to EF configuration)
         _context.Users.Remove(user);
         await _context.SaveChangesAsync();
     }

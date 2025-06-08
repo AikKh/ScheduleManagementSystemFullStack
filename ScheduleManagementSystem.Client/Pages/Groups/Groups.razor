@@ -416,9 +416,8 @@
             var success = await GroupService.LeaveGroupAsync(groupId);
             if (success)
             {
-                await LoadData(); // Refresh the data
-
-                // If group details modal is open and it's the same group, refresh it
+                await LoadData(); 
+                
                 if (showGroupDetailsModal && selectedGroupDetails?.Id == groupId)
                 {
                     await ViewGroupDetails(groupId);
@@ -455,7 +454,7 @@
             var newGroup = await GroupService.CreateGroupAsync(groupForm);
             if (newGroup != null)
             {
-                await LoadData(); // Refresh the data
+                await LoadData(); 
                 CloseCreateGroupModal();
             }
             else

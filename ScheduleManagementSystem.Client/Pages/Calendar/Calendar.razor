@@ -351,18 +351,15 @@
     {
         var days = new List<CalendarDay>();
 
-        // Simple calendar generation
         var firstDay = new DateTime(currentDate.Year, currentDate.Month, 1);
         var lastDay = firstDay.AddMonths(1).AddDays(-1);
 
-        // Find Monday of the first week
         var startDay = firstDay;
         while (startDay.DayOfWeek != DayOfWeek.Monday)
         {
             startDay = startDay.AddDays(-1);
         }
 
-        // Find Sunday of the last week
         var endDay = lastDay;
         while (endDay.DayOfWeek != DayOfWeek.Sunday)
         {
@@ -377,7 +374,6 @@
                          (e.Description?.Contains(searchTerm, StringComparison.OrdinalIgnoreCase) ?? false)))
             .ToList();
 
-        // Generate all days
         for (var date = startDay; date <= endDay; date = date.AddDays(1))
         {
             var dayEvents = filteredEvents.Where(e => e.Date.Date == date.Date).ToList();
