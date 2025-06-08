@@ -93,25 +93,15 @@ public class AuthService(
         return !string.IsNullOrEmpty(token);
     }
 
-    public void LoginWithGoogle(string returnUrl = "/profile")
+    public void LoginWithGoogle()
     {
         try
         {
-            // Get the current Blazor app URL to return to after authentication
             var currentUri = _navigationManager.ToAbsoluteUri(_navigationManager.Uri);
             var blazorBaseUrl = $"{currentUri.Scheme}://{currentUri.Authority}";
 
-            // The return URL should be back to the Blazor app, not the API
-            var fullReturnUrl = $"{blazorBaseUrl}{returnUrl}";
-            var encodedReturnUrl = Uri.EscapeDataString(fullReturnUrl);
+            var googleLoginUrl = $"{_httpClient.BaseAddress}api/google_auth/login";
 
-            // CRUCIAL: Navigate to the API server, not the client server
-            var googleLoginUrl = $"{_httpClient.BaseAddress}api/google_auth/login?returnUrl={encodedReturnUrl}";
-
-            Console.WriteLine($"Navigating to Google auth: {googleLoginUrl}");
-            Console.WriteLine($"Return URL will be: {fullReturnUrl}");
-
-            // Navigate to the API server for Google authentication
             _navigationManager.NavigateTo(googleLoginUrl, forceLoad: true);
         }
         catch (Exception ex)

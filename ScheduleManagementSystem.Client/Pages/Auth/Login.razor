@@ -145,10 +145,7 @@
 
         try
         {
-            // Use the AuthService method for Google login
-            // This will navigate to the API endpoint with proper return URL handling
-            var destination = !string.IsNullOrEmpty(returnUrl) ? returnUrl : "/profile";
-            AuthService.LoginWithGoogle(destination);
+            AuthService.LoginWithGoogle();
         }
         catch (Exception ex)
         {

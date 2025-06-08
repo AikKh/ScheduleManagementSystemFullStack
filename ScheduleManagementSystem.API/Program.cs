@@ -10,6 +10,7 @@ using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.Authentication.OAuth;
 using Microsoft.AspNetCore.Authentication.Google;
 using Microsoft.AspNetCore.HttpOverrides;
+using Microsoft.Extensions.Options;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -42,6 +43,11 @@ builder.Services.AddScoped<GroupService>();
 builder.Services.AddDataProtection()
     .SetApplicationName("ScheduleManagementSystem")
     .SetDefaultKeyLifetime(TimeSpan.FromDays(30));
+
+builder.Services.Configure<CookiePolicyOptions>(options => {
+    options.MinimumSameSitePolicy = SameSiteMode.None;
+    options.Secure = CookieSecurePolicy.Always;
+});
 
 builder.Services.Configure<ForwardedHeadersOptions>(options =>
 {
@@ -111,6 +117,8 @@ builder.Services.AddAuthentication(options =>
     googleOptions.CorrelationCookie.HttpOnly = true;
     googleOptions.CorrelationCookie.SameSite = SameSiteMode.None; // Critical for cross-site redirects
     googleOptions.CorrelationCookie.SecurePolicy = CookieSecurePolicy.Always;
+    googleOptions.SaveTokens = true;
+
     googleOptions.CorrelationCookie.IsEssential = true;
 
     // Extend timeout to handle potential network delays
@@ -162,5 +170,6 @@ app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();
+app.UseCookiePolicy();
 
 app.Run();
